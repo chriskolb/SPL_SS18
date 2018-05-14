@@ -22,7 +22,7 @@ summary(hl$hlc0007)
 #Haushaltsnettoeinkommen deskriptive Analyse
 summary(hl$hlc0005)
 ifelse(hl$hlc0005>0,print(hl$hlc0005),NA)
-#Median und Minimum für gewisse Jahre 
+#Median und Minimum fÃ¼r gewisse Jahre 
 #library("plyr", lib.loc="~/R/win-library/3.4")
 #library(dplyr)
 
@@ -39,3 +39,4 @@ sumyear
 
 ggplot(sumyear, aes(syear, Average)) + geom_point()
 ggplot(sumyear, aes(syear,  Average)) + geom_line()
+print("Chris ist ein HS")
