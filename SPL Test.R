@@ -39,4 +39,21 @@ sumyear
 
 ggplot(sumyear, aes(syear, Average)) + geom_point()
 ggplot(sumyear, aes(syear,  Average)) + geom_line()
-print("Chris ist ein HS")
+#erbschaft ist hlc0032 ,  ALG2, Sozi0014algeld im letzten Jahr, bezogen hlc0052 
+# Anzahl Kinder hlc0043, hlk0044
+#Eigenheimsf�rderung hlc0075
+#Grundbesitz hlc0099
+# WICHTIG : Besitz der Wohnung : hlf0001, hlf0002, hlf0004, hlf0008, 
+# Gute Variable um Zeitpunkt zuordnen zu k�nnen : Schon vor einem Jahr Eigent�mer :  hlf0014 und  hlf0015 : Seit diesem Jahr neuerdings EIgent�mer
+# Wohnfl�che : hlf0019, hlf0020
+# Modernisierung hlf0046
+# Mitekosten hlf0095,
+# Einzugsjahr hlf0101
+
+#Kaufjahr des Eigentumsgi
+ifelse(hl$hlf0015 == 1, kaufjahr <- hl$syear, kaufjahr <- NA)
+
+ifelse(hl$hlf0014 == 1, kaufjahr <- hl$syear-1, kaufjahr <- NA)
+library(foreach)
+foreach(hl$cid == 1: 3499900, kauf <- min(kaufjahr))
+
