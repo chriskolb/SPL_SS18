@@ -1,0 +1,339 @@
+#Nötige Packages
+path <- "C:/Users/Richard/Documents/Statistik/Semester 2/Datenanalyse/Analyse/Daten"
+setwd(path)
+#install.packages("bigmemory",dependencies=TRUE)
+#install.packages("biganalytics",dependencies=TRUE)
+#install.packages("dplyr",dependencies=TRUE)
+#install.packages("plm")
+#nstall.packages("varhandle")
+#install.packages("survival")
+install.packages("rms")
+install.packages("survminer")
+# Libraries------------------------------------------------------------------
+library(varhandle)
+
+
+library(rms)
+library(survminer)
+library(plm)
+library("data.table", lib.loc="~/R/win-library/3.4")
+library("dplyr", lib.loc="~/R/win-library/3.4")
+library(bigmemory)
+library("Matrix", lib.loc="C:/Program Files/R/R-3.4.4/library")
+library("stats", lib.loc="C:/Program Files/R/R-3.4.4/library")
+library("survival", lib.loc="~/R/win-library/3.4")
+library("bitops", lib.loc="~/R/win-library/3.4")
+library(haven)
+library(data.table)
+library(ggplot2)
+library("plyr", lib.loc="~/R/win-library/3.4")
+library(dplyr)
+#memory.limit()
+
+rm(list=ls())
+
+
+#Datensatz HH Daten----------------------------------------------------------
+
+pequiv <- read_dta("pequiv.dta")
+
+#Definition als Datenmatrix
+pequiv = as.data.table(pequiv)
+#Restriktionen für Altersklasse   nicht geklappt
+#View(pequiv)
+#View(pequivnew$d11101)
+
+#rm(list=ls())
+#load("pequivnew.Rda")
+#View(pequivnew)
+#setDT(pequiv)[,if(.N ==1) .SD,by=pid]
+
+# wo HH head ändert !!XXXXXX
+pequivnew <- subset(pequiv, ((d11101>24) & (d11101<66)))
+pequivnew <- subset(pequivnew, d11105 == 1)
+#pequivnew = as.data.table(pequivnew)
+
+
+pequivvariables <- c("pid" , "hid" , "syear" , "d11102ll" , "d11101" , "d11104" , "d11107" , "d11108" , "d11109" , "e11101" , "e11102" , "e11103" , "e11104" , "e11105" , "e11106" , "e11107" , "i11101" , "i11103" , "i11110" , "i11210" , "w11101" , "w11102" , "w11103" , "w11105" , "h11112" , "y11101" , "l11101" , "l11102" , "m11122" , "m11123" , "p11101" , "iself" , "ijob1" , "ijob2" , "imilt" , "i13ly" , "i14ly" , "ixmas" , "iholy" , "igray" , "iothy" , "itray" , "idemy" , "alg2" , "m11126" , "m11109")
+
+pequivsmall <- select(pequivnew, one_of(pequivvariables))
+
+save(pequivsmall, file="pequivsmall.RDA")
+
+
+# Datensatz hgen---------------------------------------------------------------------------------------------
+
+hgen <- read_dta("hgen.dta")
+
+hgenvariables <- c("cid" , "hid" , "syear", "hgacquis" , "hgowner" , "hgmoveyr", "hgrent")
+
+hgensmall <- select(hgen, one_of(hgenvariables))
+
+save(hgensmall, file="hgensmall.RDA")
+#View(hgensmall)
+
+#Romantic Chris Rich Test LOL unnötig <- count number of obs in syear/hid cluster
+#numdata <- as.data.table(pequivsmall[, .N, by = list(syear, hid)])
+#min(numdata$N)
+
+
+
+
+
+
+
+#MErge Files
+attributes(pequivsmall$syear) <- NULL
+attributes(pequivsmall$hid) <- NULL
+attributes(hgensmall$syear) <- NULL
+attributes(hgensmall$hid) <- NULL
+
+unname(pequivsmall$syear, force = TRUE)
+unname(pequivsmall$hid, force = TRUE)
+unname(hgensmall$syear, force = TRUE)
+unname(hgensmall$hid, force = TRUE)
+
+
+
+data = inner_join(pequivsmall, hgensmall, by = c("hid", "syear"))
+#View(data)
+
+#secondmerge = merge(pequivsmall, hgensmall, by.pequivsmall = c("syear","hid"), by.hgensmall = c("syear", "hid"), all = FALSE)
+#View(secondmerge)
+
+#Mark dissolved HH 
+
+dissolveddata <- aggregate(data$pid ~ data$hid, data , function(x) (max(x)-min(x)))
+
+names(dissolveddata)[names(dissolveddata) == "data$pid"] <- "dissolved"
+names(dissolveddata)[names(dissolveddata) == "data$hid"] <- "hid"
+
+#View(dissolveddata)
+data = inner_join(data, dissolveddata, by = c("hid"))
+
+
+#test <- data.frame(data$hid, data$syear, data$pid , data$dissolved)
+#View(test)
+
+data <- subset(data, dissolved == 0)
+
+#save(data, file="data.RDA")
+
+
+#View(data)
+#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+# Erstellen eines Zeitindexes
+data <- mutate(data, timevar = data$d11101 - 25)
+#View(data$timevar)
+#View(data$timevar)
+#sort(merged.file$timevar)
+
+#summarise(merged.file$timevar)
+
+
+#Individuen die im Datensatz eine Startbeobachtung haben die älter ist als 25 ( Alter der ersten beobachtung > 25)
+
+minage.file <- aggregate(data$d11101 ~ data$hid, data , function(x) min(x))
+names(minage.file)[names(minage.file) == "data$d11101"] <- "minage"
+names(minage.file)[names(minage.file) == "data$hid"] <- "hid"
+data = merge(minage.file, data, by.minage.file = c("hid"), by.data = c("hid"), all = T)
+
+test <- data.frame(data$hid, data$syear, data$d11101, data$minage, data$timevar)
+View(test)
+#minage==25 reduces data from 215k to 27k XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+#View(data)
+
+#View(c("data$minage", "data$d11101"))
+data <- subset(data, data$minage  < 26)
+#View(data)
+save(data, file="data.RDA")
+rm(list=ls())
+
+#Zum Panel Format umformulieren-----------------------------------
+
+load(file = "data.rda")
+pldata <- pdata.frame(data, index =c("hid", "syear"))
+#View(pldata)
+#save(pldata, file="pldata.RDA")
+
+
+
+
+
+# hgowner lagged variable 
+setDT(pldata)[, lagowner:= shift(hgowner), hid]
+
+
+hgowner <- pldata$hgowner
+
+#View(pldata$lagowner)
+
+#test <- data.frame(pldata$hid, pldata$lagowner, pldata$hgowner, pldata$syear)
+#View(test)
+
+#View(hgowner)
+#print(hgowner)
+
+
+# Wechsel des HH Besitzers
+pldata <- mutate(pldata, change1 = ifelse((c(hgowner) == 1 & c(pldata$lagowner) == 2), 1, NA))
+pldata <- mutate(pldata, change2 = ifelse((c(hgowner) == 1 & c(pldata$lagowner) ==3), 1, NA))
+pldata <- mutate(pldata, change3 = ifelse((c(hgowner) == 1 & c(pldata$lagowner) ==4), 1, NA))
+pldata <- mutate(pldata, change4 = ifelse((c(hgowner) == 1 & c(pldata$lagowner) ==5), 1, NA))
+pldata <- mutate(pldata, changetot = ifelse((c(pldata$change1)== 1 | c(pldata$change2) == 1 | c(pldata$change3) == 1 | c(pldata$change4) == 1), 1, NA))
+pldata <- mutate(pldata, changetot = ifelse((c(hgowner) >= 2 & c(hgowner) <= 5 & c(pldata$lagowner) >= 2 & c(pldata$lagowner) <= 5), 0, changetot))
+pldata <- mutate(pldata, changetot = ifelse((c(hgowner)==1 & c(pldata$lagowner) ==1), 0, changetot))
+pldata <- mutate(pldata, changetot = ifelse((c(hgowner)>=2 & c(hgowner) <= 5 & c(pldata$lagowner) ==1), -2, changetot))
+pldata <- mutate(pldata, changetot = ifelse((c(hgowner)==-1 & c(pldata$lagowner) ==1), -3, changetot))
+pldata <- mutate(pldata, changetot = ifelse(is.na(pldata$lagowner), -1, changetot))
+
+
+#Erläuterung changetot
+#-3: keine Angabe in hgowner oder L.hgowner
+#-2: Wechsel von Eigentümer zu einem Mieterhältnis (2-5)
+#-1: first wave
+#0: entweder kein Wechsel, oder Wechsel innerhalb von versch. Mietverhältnissen
+#1: Wechsel von einem Mietsverhältnis (2-5) zu Eigentum (1)
+
+
+
+
+#Erstellen einer Failure Variable ist die einfachere version von changetot
+pldata <- mutate(pldata, failure = ifelse(c(changetot== 0), 0, ifelse(c(changetot)==1, 1, 0)))
+
+
+#test <- data.frame(pldata$hid, pldata$change1, pldata$change2, pldata$change3, pldata$change4,pldata$hgowner, pldata$lagowner, pldata$changetot, pldata$failure, pldata$timevar)
+#View(test)
+#pldata <- pldata[order(pldata$syear, pldata$hid),]
+
+#View(pldata)
+#Erstes Jahr der Beobachtung eines HH
+pldata2 <- aggregate(as.numeric(as.character(syear)) ~ hid, pldata, function(x) min(x))
+
+names(pldata2)[names(pldata2) == "as.numeric(as.character(syear))"] <- "firstyear"
+#View(pldata2)
+pldata = merge(pldata2, pldata, by.pldata = c("hid"), by.pldata2 = c("hid"), all = T)
+pldata <- pldata[order(pldata$hid, pldata$syear),]
+#View(pldata)
+#Anzahl der beobachteten Jahre-------------------------------------------
+#print(pldata$syear)
+pldata3 <- aggregate(syear ~ hid, pldata, function(x) as.numeric(as.character(length(as.factor(x)))))
+#View(pldata3)
+names(pldata3)[names(pldata3) == "syear"] <- "noofyears"
+pldata = merge(pldata, pldata3, by.pldata = c("hid"), by.pldata3 = c("hid"), all = T)
+
+
+
+test <- data.frame(pldata$hid, pldata$syear,pldata$timevar)
+#View(test)
+
+
+
+
+
+
+
+
+#Gibt es bei einem haushalt überhaupt einen Hauskauf von Interesse? Changeflag,identify cases--------------------------------------------------------
+
+pldata4 <- aggregate(changetot ~ hid, pldata, function(x) max(x))
+names(pldata4)[names(pldata4) == "changetot"] <- "changeflag"
+pldata = merge(pldata, pldata4, by.pldata = c("hid"), by.pldata4 = c("hid"), all = T)
+#names(pldata)
+pldata <- mutate(pldata, changeflag = ifelse(pldata$changeflag < 1, 0, changeflag))
+
+
+
+#generate birthyear and cohorts
+pldata$syear = as.numeric(as.character(pldata$syear))
+
+#View(pldata)
+#class(pldata$syear)
+pldata$birthyear <- pldata$syear -pldata$d11101
+
+
+
+#Stand 22.05 
+
+pldata <- mutate(pldata, cohort11 = ifelse((c(syear == 1985) & c(d11101 < 30)), 1, 0))
+cohortdata1 <- aggregate(cohort11 ~ hid, pldata, function(x) max(x))
+names(cohortdata1)[names(cohortdata1) == "cohort11"] <- "cohort1"
+pldata = merge(pldata, cohortdata1, by.pldata = c("hid"), by.cohortdata1 = c("hid"), all = T)
+
+
+
+
+
+
+
+
+
+pldata <- mutate(pldata, cohort21 = ifelse((c(syear == 1990) & c(d11101 == 25)), 1, 0))
+cohortdata2 <- aggregate(cohort21 ~ hid, pldata, function(x) max(x))
+names(cohortdata2)[names(cohortdata2) == "cohort21"] <- "cohort2"
+pldata = merge(pldata, cohortdata2, by.pldata = c("hid"), by.cohortdata2 = c("hid"), all = T)
+
+
+pldata <- mutate(pldata, cohort31 = ifelse((c(syear == 1995) & c(d11101 == 25)), 1, 0))
+cohortdata3 <- aggregate(cohort31 ~ hid, pldata, function(x) max(x))
+names(cohortdata3)[names(cohortdata3) == "cohort31"] <- "cohort3"
+pldata = merge(pldata, cohortdata3, by.pldata = c("hid"), by.cohortdata3 = c("hid"), all = T)
+
+
+#test <- data.frame(pldata$hid, pldata$syear, pldata$firstyear, pldata$d11101, pldata$cohort11, pldata$cohort1, pldata$cohort21, pldata$timevar)
+#test <- test[order(pldata$hid, pldata$syear),]
+#View(test)
+
+
+pldata <- mutate(pldata, cohort = ifelse(cohort1 == 1, 1, NA))
+pldata <- mutate(pldata, cohort = ifelse(cohort2 == 1, 2, cohort))
+pldata <- mutate(pldata, cohort = ifelse(cohort3 == 1, 3, cohort))
+
+pldata <- mutate(pldata, cohort1 = ifelse(((cohort > 0) & (cohort <= 3) & (cohort != 1)), 0, cohort1))
+pldata <- mutate(pldata, cohort2 = ifelse(((cohort > 0) & (cohort <= 3) & (cohort != 1)), 0, cohort2))
+pldata <- mutate(pldata, cohort3 = ifelse(((cohort > 0) & (cohort <= 3) & (cohort != 1)), 0, cohort3))
+
+test <- data.frame(pldata$hid, pldata$cohort1, pldata$cohort2, pldata$cohort3, pldata$cohort, pldata$syear, pldata$minage, pldata$firstyear)
+test <- test[order(pldata$hid, pldata$syear),]
+#View(test)
+
+
+# Alle individuen die eine Erbschaft oder Schenkung haben entfernen
+#View(pldata$hgacquis)
+pldata <- subset(pldata, hgacquis != 2)
+
+
+save(pldata, file="Datensatz.RDA")
+#_________________ANALYSE_____________________________-
+rm(list=ls())
+
+load("Datensatz.Rda")
+
+#View(pldata)
+
+# Variablen bitte umbenennen
+
+
+#Wie viele Jahre bis zum Hauskauf ??
+
+
+
+time <- as.numeric(pldata$timevar)
+class(time)
+event <- pldata$failure
+X <- cbind(pldata$birthyear)
+group <- pldata$cohort
+
+test <- data.frame(pldata$hid, pldata$syear, pldata$minage, pldata$firstyear, pldata$timevar, pldata$failure, pldata$cohort)
+test <- test[order(pldata$hid, pldata$syear),]
+View(test)
+
+
+kmsurvival <- survfit(Surv(time,event) ~ group)
+summary(kmsurvival)
+plot(kmsurvival, xlab = "Time", ylab = "Survival Probabiility", xlim=c(0,45))
+
+
