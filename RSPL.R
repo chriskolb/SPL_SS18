@@ -53,29 +53,34 @@ rm(list=ls())
 ####################  Data cleaning #########################################################
 #############################################################################################
 
+#subsetting pequiv takes too long on my pc
+#I commented out this part and load pequivsmall right away
+
 #information on individual (household head) characteristics from pequiv.dta
 
-pequiv <- read_dta("pequiv.dta")
+#pequiv <- read_dta("pequiv.dta")
 
 #declare as data table
-pequiv = as.data.table(pequiv)
+#pequiv = as.data.table(pequiv)
 
 #restrict dataset to individuals aged 24 to 65
-pequivnew <- subset(pequiv, d11101>23 & d11101<66)
+#pequivnew <- subset(pequiv, d11101>23 & d11101<66)
 
 #restrict dataset to household heads due to availability of hgowner only on household level
 
-pequivnew <- subset(pequivnew, d11105 == 1)
+#pequivnew <- subset(pequivnew, d11105 == 1)
 #pequivnew = as.data.table(pequivnew)
 
 
-pequivvariables <- c("pid" , "hid" , "syear" , "d11102ll" , "d11101" , "d11104" , "d11108" , "d11109" ,  "e11106" , "i11101" , "i11103" , "w11102" , "w11103" , "y11101" , "l11101" , "l11102" , "iself" , "ijob1" , "ijob2")
+#pequivvariables <- c("pid" , "hid" , "syear" , "d11102ll" , "d11101" , "d11104" , "d11108" , "d11109" ,  "e11106" , "i11101" , "i11103" , "w11102" , "w11103" , "y11101" , "l11101" , "l11102" , "iself" , "ijob1" , "ijob2")
 
-pequivsmall <- select(pequivnew, one_of(pequivvariables))
+#pequivsmall <- select(pequivnew, one_of(pequivvariables))
 
-save(pequivsmall, file="pequivsmall.RDA")
+#save(pequivsmall, file="pequivsmall.RDA")
 
-rm(pequiv, pequivnew, pequivvariables)
+#rm(pequiv, pequivnew, pequivvariables)
+
+load(file="pequivsmall.RDA")
 
 #information on household renting/ownership status from hgen.dta
 
@@ -168,7 +173,7 @@ names(minage.dat)[names(minage.dat) == "data$hid"] <- "hid"
 
 #merge minage variable to dataset
 #print befehl muss rein (oder irgendein anderer)  weil merge ansonsten nicht funktioniert
-#befehle nacheinander ausführen funktioniert, aber ganzen minage code auf einmal nicht 
+#befehle nacheinander ausfÃ¼hren funktioniert, aber ganzen minage code auf einmal nicht 
 print("join minage to data")
 data = left_join(data, minage.dat, by = "hid")
 summary(data$minage)
@@ -177,15 +182,16 @@ rm(minage.dat)
 
 head(data[,c("hid", "syear", "d11101", "minage")])
 
-#minage==25 reduces data from ~215k to 27k !
+#minage==25 reduces data from ~210k to 27k !
 
 #keep only individuals that were surveyed starting before or at age 30
-#reduces dataset from ~215k to 64k
-data <- subset(data, data$minage  <= 30)
+#reduces dataset from ~210k to 64k
+#reducing to minage<=25 reduces dataset to 26k observations
+data <- subset(data, minage <= 25)
+data <- subset(data, d11101>=25)
 #View(data)
 save(data, file="data.RDA")
 rm(list=ls())
-
 
 
 # create indicators and time variables ########################################
@@ -293,8 +299,6 @@ table(data$failureflag, data$failure2flag)
 data$birthyear <- data$syear -data$d11101
 summary(data$birthyear)
 
-#SIDE NOTE:
-#Surv can take two versions, second is with tstart and tstop in long format
 data$time <- data$syear - (data$firstyear-1)
 data$tstart <- data$time - 1
 data$tstop <- data$time
@@ -344,6 +348,12 @@ View(data[, c("hid", "syear", "hgowner" , "rent", "owner", "change", "failure", 
 
 save(data, file="datalong.RDA")
 
+
+# wide format ####################################################################
+
+
+
+
 ##################################################################################
 #################### ANALYSIS ####################################################
 ##################################################################################
@@ -372,6 +382,8 @@ kmcurve <- ggsurvplot(min.fit, conf.int=F,
                       xlim=c(0,30),
                       surv.median.line="hv",
                       linetype=c(1,1))
+#control line width through geom_step(size = 2)
+#pl<-ggsurvplot
 #print and save survival curve
 print(kmcurve)
 ggsave(file = "kmcurve.pdf", print(kmcurve))
@@ -391,7 +403,7 @@ arrange_ggsurvplots(glist, print = TRUE, ncol = 3, nrow = 1)
 
 
 ###############################################################################
-######## Richies Kram noch: vll paar nice bausteine für cohortenindikatoren####
+######## Richies Kram noch: vll paar nice bausteine fÃ¼r cohortenindikatoren####
 ###############################################################################
 
 pldata <- mutate(pldata, cohort11 = ifelse((c(syear == 1985) & c(d11101 < 30)), 1, 0))
