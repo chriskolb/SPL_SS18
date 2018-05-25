@@ -143,13 +143,9 @@ data = inner_join(data, dissolvedata, by = "hid")
 #View(data[,c("hid", "pid", "syear", "dissolved")])
 
 #remove dissolved households from analysis
-#obs go from 247k to 217k, which corresponds to what we expect
+#obs go from 247k to 215k, which corresponds to what we expect
 data <- subset(data, dissolved == 0)
 
-data$dissolved.x <- NULL
-data$dissolved.x.x <- NULL
-data$dissolved.y <- NULL
-data$dissolved.y.y <- NULL
 rm(dissolvedata)
 
 
@@ -160,7 +156,7 @@ data$inherit[data$hgacquis == 2] <- 1
 table(data$inherit)
 
 #remove observations where inherit=1
-#reduces data from 64k to 62k
+#reduces data from 215k to 201k
 data <- subset(data, inherit == 0)
 
 #age at first observation (minage)
@@ -182,13 +178,12 @@ rm(minage.dat)
 
 head(data[,c("hid", "syear", "d11101", "minage")])
 
-#minage==25 reduces data from ~210k to 27k !
+#minage==25 reduces data from ~201k to <30k !
 
 #keep only individuals that were surveyed starting before or at age 30
 #reduces dataset from ~210k to 64k
 #reducing to minage<=25 reduces dataset to 26k observations
 data <- subset(data, minage <= 25)
-data <- subset(data, d11101>=25)
 #View(data)
 save(data, file="data.RDA")
 rm(list=ls())
@@ -199,15 +194,12 @@ rm(list=ls())
 
 
 load(file = "data.RDA")
-#pldata <- pdata.frame(data, index =c("hid", "syear"))
-#View(pldata)
-#save(pldata, file="pldata.RDA")
 
 
 # hgowner lagged variable 
 setDT(data)[, laghgowner:= shift(hgowner), hid]
 summary(data$laghgowner)
-#NA for 8k out of 62k
+#NA for 3.2k out of 26k
 
 
 # change variable indicates type of change in homeownership from last year to current year
@@ -363,32 +355,34 @@ save(data, file="datalong.RDA")
 #Maybe need to convert to wide format to declare Surv(time,event)
 
 #create minimal dataset to try out survival functions
-minimal <- data[, c("hid", "syear", "tstart", "tstop", "time", "failure", "failureflag", "d11102ll")]
+minimal <- data[, c("hid", "syear", "tstart", "tstop", "time", "failure", "failureflag", "l11102")]
 
+minimal$tstart <- minimal$tstart - 2
+minimal$tstop <- minimal$tstop - 2
 #define survival object in long format version (interval censored)
-min.fit <- survfit(Surv(minimal$tstart, minimal$tstop, minimal$failure) ~ d11102ll,
+min.fit <- survfit(Surv(tstart, tstop, failure) ~ l11102,
                    data=minimal)
-#summary(min.fit)
+summary(min.fit)
 
 #define survival curve object
-kmcurve <- ggsurvplot(min.fit, conf.int=F,
+kmcurve <- ggsurvplot(min.fit, conf.int=T,
                       legend.labs=c("West", "East"), legend.title="Region",  
-                      palette=c("dodgerblue2", "orchid2"), 
                       title="Kaplan-Meier Curve for Survival in Rent", 
                       censor=F,
+                      palette = "strata",
                       risk.table = T,
-                      risk.table.height=.3,
-                      ylim=c(0.0,1),
+                      risk.table.height=.25,
+                      ylim=c(0.25,1),
                       xlim=c(0,30),
-                      surv.median.line="hv",
-                      linetype=c(1,1))
+                      surv.median.line="h",
+                      linetype=c(1,1),
+                      size = 0.5)
 #control line width through geom_step(size = 2)
-#pl<-ggsurvplot
 #print and save survival curve
 print(kmcurve)
 ggsave(file = "kmcurve.pdf", print(kmcurve))
 
-#summary(min.fit)
+summary(min.fit)
 
 
 
