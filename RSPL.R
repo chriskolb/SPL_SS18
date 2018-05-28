@@ -576,3 +576,6 @@ cumulhaz <- ggsurvplot(min.fit.coh, conf.int=T,
 
 glist <- list(survprob, cumprop, cumulhaz)
 arrange_ggsurvplots(glist, print = TRUE, ncol = 3, nrow = 1)
+
+
+# Lisa is genious 
