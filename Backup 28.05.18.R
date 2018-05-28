@@ -184,7 +184,7 @@ names(minage.dat)[names(minage.dat) == "data$hid"] <- "hid"
 
 #merge minage variable to dataset
 #print befehl muss rein (oder irgendein anderer)  weil merge ansonsten nicht funktioniert
-#befehle nacheinander ausführen funktioniert, aber ganzen minage code auf einmal nicht 
+#befehle nacheinander ausfÃ¼hren funktioniert, aber ganzen minage code auf einmal nicht 
 print("join minage to data")
 data = left_join(data, minage.dat, by = "hid")
 summary(data$minage)
