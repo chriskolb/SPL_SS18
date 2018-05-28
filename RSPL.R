@@ -16,7 +16,7 @@ source(packages.R)
 
 #information on individual (household head) characteristics from pequiv.dta
 
-pequiv <- rio::import(paste(path,"pequiv.csv",sep="/"))
+pequiv <- read_dta("pequiv.dta")
 
 #declare as data table
 pequiv = as.data.table(pequiv)
