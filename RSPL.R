@@ -1,11 +1,13 @@
 #Set-up
 
 rm(list=ls())
+
+#setwd(path) in path.R
 source("path.R")
-#packages und library sollten nicht in einem script geladen werden.
+
+#install and load packages
 #source("packages.R")
 source("library.R")
-
 
 #############################################################################################
 ####################  Data cleaning #########################################################
