@@ -1,37 +1,8 @@
-path <- "/Users/alicedrube/Documents/Uni /Master/SS 18/SPL"
-setwd(path)
-install.packages("bigmemory",dependencies=TRUE)
-install.packages("biganalytics",dependencies=TRUE)
-install.packages("dplyr",dependencies=TRUE)
-install.packages("plm")
-install.packages("varhandle")
-install.packages("survival")
-install.packages("haven")
-install.packages("tidyr")
-install.packages("bitops")
-install.packages("survminer")
 
-library(foreign) 
-library(car) # scatter3d()
-library(Hmisc) # describe(mydata)
-library(varhandle)
-library(pastecs) #stat.desc(mydata)
-library(rms)
-library(survminer)
-library(plm)
-library(data.table)
-library(bigmemory)
-library(Matrix)
-library(stats)
-library(survival)
-library(bitops)
-library(haven)
-library(data.table)
-library(ggplot2)
-library(plyr) #plyr muss vor dplyr
-library(dplyr)
-library(haven)
-library(tidyr)
+source(".path.R")
+source("packages.R")
+
+
 #memory.limit()
 #rm(list=ls())
 
@@ -45,7 +16,7 @@ library(tidyr)
 
 #information on individual (household head) characteristics from pequiv.dta
 
-pequiv <- read_dta("pequiv.dta")
+pequiv <- read.csv(paste(path, "pequiv.csv", sep="/"))
 
 #declare as data table
 pequiv = as.data.table(pequiv)
