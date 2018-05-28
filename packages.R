@@ -1,4 +1,3 @@
-#test
 #install packages
 install.packages("bigmemory",dependencies=TRUE)
 install.packages("biganalytics",dependencies=TRUE)
