@@ -1,0 +1,1 @@
+print("Rich test second")
