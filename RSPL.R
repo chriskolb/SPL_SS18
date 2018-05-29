@@ -3,7 +3,7 @@
 rm(list=ls())
 
 #setwd(path) in path.R
-source("path.R")
+source(".path.R")
 
 #install and load packages
 #source("packages.R")
