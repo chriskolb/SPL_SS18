@@ -1,7 +1,7 @@
 #Set-up
 
 rm(list=ls())
-getwd()
+#getwd()
 #setwd(path) in path.R
 source("path.R")
 
@@ -44,8 +44,8 @@ source("library.R")
 #rm(pequiv, pequivnew, pequivvariables)
 
 ############################################################################################
+#rm(list=ls())
 
-load(file="pequivsmall.RDA")
 
 #information on household renting/ownership status from hgen.dta
 
@@ -67,23 +67,52 @@ rm(hgen, hgenvariables)
 
 #other data sets include interesting variables:
 #ppfadl: germborn migback
-#pl: plh0204 (willingness to take risks) MUSS Ich mir noch anschauen, mein STATA ist zu klein
-#biol: ll0090 (edumom), ll0091 (edudad)
+#pl: plh0204 (willingness to take risks),plb0022 working status
+
 
 ###########################################################################################
 #Additional variables from files with minor importance
+#rm(list=ls())
 
-pl <- read_dta("pl.dta")
+memory.limit(size=80000)  # Da der Datensatz Riesig ist, bisschen big data skills
 
-hgenvariables <- c("cid" , "hid" , "syear", "hgacquis" , "hgowner" , "hgmoveyr", "hgrent")
+pl <- read_dta("pl.dta") 
+#pllabel <- pl %>% map_chr(~attributes(.)$label)
+#View(pllabel)
+# Gibt z.B. noch Variablen bzgl. Erbe damit man da noch genauer Observations entfernen könnte, Restschuld Haus, Wohnung plc0411, plc0348 Eigentumsanteil Haus, Wohnung
+plvariables <- c("cid" , "hid" , "syear", "plb0022", "plh0204", "plc0411", "plc0348")
 
-hgensmall <- select(hgen, one_of(hgenvariables))
+plsmall <- select(pl, one_of(plvariables))
 
-save(hgensmall, file="hgensmall.RDA")
-#View(hgensmall)
+save(plsmall, file="plsmall.RDA")
 
-rm(hgen, hgenvariables)
+rm(pl, plvariables)
+#View(plsmall)
+
+####################################biol#########################################
+#rm(list=ls())
+biol <- read_dta("biol.dta") 
+#biollabel <- biol %>% map_chr(~attributes(.)$label)
+#View(biollabel)
+#biol: ll0090 (edumom), ll0091 (edudad)
+biolvariables <- c("cid" , "hid" , "syear", "ll0090", "ll0091")
+
+biolsmall <- select(biol, one_of(biolvariables))
+
+save(biolsmall, file="biolsmall.RDA")
+
+
+rm(biol, biolvariables)
+#View(biolsmall)
+
+rm(list=ls())
+
+##########################################################################################
 # Merge Files ########################################################################
+load(file="pequivsmall.RDA")
+load(file="hgensmall.RDA")
+load(file="plsmall.RDA")
+load(file="biolsmall.RDA")
 
 #need to remove attributes of identifying variables or otherwise dplyr::inner_join does not work
 
@@ -91,6 +120,10 @@ attributes(pequivsmall$syear) <- NULL
 attributes(pequivsmall$hid) <- NULL
 attributes(hgensmall$syear) <- NULL
 attributes(hgensmall$hid) <- NULL
+attributes(plsmall$syear) <- NULL
+attributes(plsmall$hid) <- NULL
+attributes(biolsmall$syear) <- NULL
+attributes(biolsmall$hid) <- NULL
 
 #unname(pequivsmall$syear, force = TRUE)
 #unname(pequivsmall$hid, force = TRUE)
@@ -99,10 +132,13 @@ attributes(hgensmall$hid) <- NULL
 
 
 data = inner_join(pequivsmall, hgensmall, by = c("hid", "syear"))
+data = inner_join(data, plsmall, by = c("hid", "syear"))
+data = inner_join(data, biolsmall, by = c("hid", "syear"))
+
+rm(hgensmall, pequivsmall, plsmall, biolsmall)
 
 
-rm(hgensmall, pequivsmall)
-
+#anschliessenden Rechnungen müssen noch überarbeitet werden ( hinzufügen der neuen variablen, aber fügt gerne in die variablenlisten hinzu, was ihr gerne noch hättet)
 
 # Data cleaning on merged data set #######################################################
 
