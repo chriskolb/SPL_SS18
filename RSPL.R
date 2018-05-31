@@ -1,7 +1,7 @@
 #Set-up
 
 rm(list=ls())
-
+getwd()
 #setwd(path) in path.R
 source("path.R")
 
@@ -67,10 +67,22 @@ rm(hgen, hgenvariables)
 
 #other data sets include interesting variables:
 #ppfadl: germborn migback
-#pl: plh0204 (willingness to take risks)
+#pl: plh0204 (willingness to take risks) MUSS Ich mir noch anschauen, mein STATA ist zu klein
 #biol: ll0090 (edumom), ll0091 (edudad)
 
+###########################################################################################
+#Additional variables from files with minor importance
 
+pl <- read_dta("pl.dta")
+
+hgenvariables <- c("cid" , "hid" , "syear", "hgacquis" , "hgowner" , "hgmoveyr", "hgrent")
+
+hgensmall <- select(hgen, one_of(hgenvariables))
+
+save(hgensmall, file="hgensmall.RDA")
+#View(hgensmall)
+
+rm(hgen, hgenvariables)
 # Merge Files ########################################################################
 
 #need to remove attributes of identifying variables or otherwise dplyr::inner_join does not work

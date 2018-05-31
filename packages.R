@@ -16,3 +16,4 @@ install.packages("naniar")
 install.packages("ggridges")
 install.packages("GGally")
 install.packages("rio") #loading data
+install.packages("tidyverse")
