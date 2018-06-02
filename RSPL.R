@@ -54,6 +54,8 @@ hgen <- read_dta("hgen.dta")
 hgenvariables <- c("cid" , "hid" , "syear", "hgacquis" , "hgowner" , "hgmoveyr", "hgrent")
 
 hgensmall <- select(hgen, one_of(hgenvariables))
+hgensmall = as.data.table(hgensmall)
+
 
 save(hgensmall, file="hgensmall.RDA")
 #View(hgensmall)
@@ -72,17 +74,18 @@ rm(hgen, hgenvariables)
 
 ###########################################################################################
 #Additional variables from files with minor importance
-#rm(list=ls())
+rm(list=ls())
 
 memory.limit(size=80000)  # Da der Datensatz Riesig ist, bisschen big data skills
 
 pl <- read_dta("pl.dta") 
 #pllabel <- pl %>% map_chr(~attributes(.)$label)
 #View(pllabel)
-# Gibt z.B. noch Variablen bzgl. Erbe damit man da noch genauer Observations entfernen könnte, Restschuld Haus, Wohnung plc0411, plc0348 Eigentumsanteil Haus, Wohnung
-plvariables <- c("cid" , "hid" , "syear", "plb0022", "plh0204", "plc0411", "plc0348")
+# Gibt z.B. noch Variablen bzgl. Erbe damit man da noch genauer Observations entfernen könnte, plb0022: employment Status: Restschuld Haus, Wohnung plc0411, plc0348 Eigentumsanteil Haus, Wohnung
+plvariables <- c("cid" ,"pid", "hid" , "syear", "plb0022", "plh0204", "plc0411", "plc0348")
 
 plsmall <- select(pl, one_of(plvariables))
+plsmall = as.data.table(plsmall)
 
 save(plsmall, file="plsmall.RDA")
 
@@ -95,9 +98,10 @@ biol <- read_dta("biol.dta")
 #biollabel <- biol %>% map_chr(~attributes(.)$label)
 #View(biollabel)
 #biol: ll0090 (edumom), ll0091 (edudad)
-biolvariables <- c("cid" , "hid" , "syear", "ll0090", "ll0091")
+biolvariables <- c("cid" , "pid", "hid" , "syear", "ll0090", "ll0091")
 
 biolsmall <- select(biol, one_of(biolvariables))
+biolsmall = as.data.table(biolsmall)
 
 save(biolsmall, file="biolsmall.RDA")
 
@@ -105,6 +109,7 @@ save(biolsmall, file="biolsmall.RDA")
 rm(biol, biolvariables)
 #View(biolsmall)
 
+#View(data)
 rm(list=ls())
 
 ##########################################################################################
@@ -114,6 +119,10 @@ load(file="hgensmall.RDA")
 load(file="plsmall.RDA")
 load(file="biolsmall.RDA")
 
+
+#names(biolsmall)[names(biolsmall) == "hid.x"] <- "hid"
+
+#View(plsmall)
 #need to remove attributes of identifying variables or otherwise dplyr::inner_join does not work
 
 attributes(pequivsmall$syear) <- NULL
@@ -121,9 +130,9 @@ attributes(pequivsmall$hid) <- NULL
 attributes(hgensmall$syear) <- NULL
 attributes(hgensmall$hid) <- NULL
 attributes(plsmall$syear) <- NULL
-attributes(plsmall$hid) <- NULL
+attributes(plsmall$pid) <- NULL
 attributes(biolsmall$syear) <- NULL
-attributes(biolsmall$hid) <- NULL
+attributes(biolsmall$pid) <- NULL
 
 #unname(pequivsmall$syear, force = TRUE)
 #unname(pequivsmall$hid, force = TRUE)
@@ -132,11 +141,36 @@ attributes(biolsmall$hid) <- NULL
 
 
 data = inner_join(pequivsmall, hgensmall, by = c("hid", "syear"))
-data = inner_join(data, plsmall, by = c("hid", "syear"))
-data = inner_join(data, biolsmall, by = c("hid", "syear"))
+
+attributes(data$pid) <- NULL
+#Hier Anwendung von Left Join, da keine Observationen von data verloren werden sollen.
+#######################MERGING PL###################################################
+data = left_join(data, plsmall, by = c("pid", "syear"))
+
+names(data)
+#Namen diversifiziert, da mehrere Daten Blätter
+data$cid.y <- NULL
+data$hid.y <- NULL
+
+names(data)[names(data) == "hid.x"] <- "hid"
+names(data)[names(data) == "cid.x"] <- "cid"
+#######################MERGING BIOL###################################################
+
+data = left_join(data, biolsmall, by = c("pid", "syear"))
+#Namen diversifiziert, da mehrere Daten Blätter
+
+data$cid.y <- NULL
+data$hid.y <- NULL
+
+names(data)[names(data) == "hid.x"] <- "hid"
+names(data)[names(data) == "cid.x"] <- "cid"
+
+#View(datatest)
 
 rm(hgensmall, pequivsmall, plsmall, biolsmall)
 
+
+data = as.data.table(data)
 
 #anschliessenden Rechnungen müssen noch überarbeitet werden ( hinzufügen der neuen variablen, aber fügt gerne in die variablenlisten hinzu, was ihr gerne noch hättet)
 
@@ -152,11 +186,14 @@ dissolvedata <- aggregate(data$pid ~ data$hid, data , function(x) (max(x)-min(x)
 names(dissolvedata)[names(dissolvedata) == "data$pid"] <- "dissolved"
 names(dissolvedata)[names(dissolvedata) == "data$hid"] <- "hid"
 summary(dissolvedata$dissolved)
-#View(dissolveddata)
 
 attributes(dissolvedata$hid) <- NULL
 attributes(data$hid) <- NULL
-data = inner_join(data, dissolvedata, by = "hid")
+
+View(dissolvedata)
+View(data)
+
+data = inner_join(data, dissolvedata, by = c("hid"))
 
 #table(data$dissolved)
 #View(data[,c("hid", "pid", "syear", "dissolved")])
@@ -208,8 +245,7 @@ save(data, file="data.RDA")
 rm(list=ls())
 
 #transform hh income to real hh income (in 2010 prices)
-data <- mutate(data, i11101 = i11101/(y11101/100) )
-
+data <- mutate(data, i11101 = i11101/(y11101/100))
 
 # create indicators and time variables ########################################
 
@@ -386,12 +422,12 @@ save(data, file="datalong.RDA")
 firstvars <- subset(data, syear == firstyear)
 firstvars <- firstvars[, c( "hid", "pid", "failureflag", "d11102ll", "d11104", "d11109", "e11106",
                            "i11101", "l11101", "l11102", "minage", "firstyear",
-                           "lastyear", "numobs", "birthyear", "firstfailyear")]
+                           "lastyear", "numobs", "birthyear", "firstfailyear", "ll0090", "ll0091")]
 
 #rename covariates
 names(firstvars) <- c( "hid", "pid", "event", "gender", "married", "yearsedu", "sector",
                        "hhinc", "state", "region", "minage", "firstyear",
-                       "lastyear", "numobs","birthyear", "firstfailyear")
+                       "lastyear", "numobs","birthyear", "firstfailyear", "edumom", "edudad")
 
 #firstvars can be used as wide dataset with time-indep. covariates
 
