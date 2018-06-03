@@ -176,7 +176,7 @@ data = as.data.table(data)
 
 # Data cleaning on merged data set #######################################################
 
-
+View(data)
 
 #Mark dissolved households (more than one PID per HID)
 
@@ -238,14 +238,15 @@ head(data[,c("hid", "syear", "d11101", "minage")])
 
 #keep only individuals that were surveyed starting before or at age 30
 #reduces dataset from ~210k to 64k
-#reducing to minage<=25 reduces dataset to 26k observations
+#reducing to minage<=25 reduces dataset to 29k observations
 data <- subset(data, minage <= 25)
 #View(data)
-save(data, file="data.RDA")
-rm(list=ls())
+
 
 #transform hh income to real hh income (in 2010 prices)
 data <- mutate(data, i11101 = i11101/(y11101/100))
+save(data, file="data.RDA")
+#rm(list=ls())
 
 # create indicators and time variables ########################################
 
@@ -407,9 +408,43 @@ summary(data$new.numfails)
 rm(numev2.dat)
 
 #View(data[, c("hid", "syear", "hgowner" , "rent", "owner", "change", "failure", "firstyear" , "lastyear", "failureflag", "failure2flag",  "time", "firstfailyear") ])
-
+names(data)
 
 save(data, file="datalong.RDA")
+
+#View(data)
+
+# Imputation ###########################################################################
+
+# Multiple Imputation by Chained Equations
+#with mice package
+
+
+#or just use simple imputation, because only data on hhinc and yearsedu is missing
+#=> maybe can simply take value from other year as much better imputation strategy
+
+
+# If income value is NA take value of next year otherwise of the year after 
+setDT(data)[, shiftincome:= lead(i11101), hid]
+setDT(data)[, shift2income:= lead(shiftincome), hid]
+data <- mutate(data, i11101impute = ifelse(data$i11101 <= 0, ifelse(data$shiftincome > 0, data$shiftincome, ifelse(data$shift2income> 0, data$shift2income, NA) ), data$i11101))
+#View(data[,c("hid", "pid", "syear", "i11101", "shiftincome", "shift2income", "i11101impute")])
+
+
+
+# If education value is NA take value of next year otherwise of the year after 
+setDT(data)[, shiftedu:= lead(d11109), hid]
+setDT(data)[, shift2edu:= lead(shiftedu), hid]
+data <- mutate(data, d11109impute = ifelse(data$d11109 <= 0, ifelse(data$shiftedu > 0, data$shiftedu, ifelse(data$shift2edu> 0, data$shift2edu, NA) ), data$d11109))
+#View(data[,c("hid", "pid", "syear", "d11109", "shiftedu", "shift2edu", "d11109impute")])
+
+#Other possibility to be neglected to choose the mean of the income by hid
+#data$hhincimputed <- ifelse(data$i11101 <= 0, aggregate(data$i11101 ~ hid, data, function(x) mean(x)), data$i11101)
+#data <- mutate(data,  hhincimputed = ifelse(data$i11101 <= 0, aggregate(i11101 ~ hid, data, function(x) mean(x)), i11101) , i11101)
+#View(data[,c("hid", "pid", "syear", "i11101", "lagincome")])
+#########################################################################################
+#########################################################################################
+
 
 
 # wide format ####################################################################
@@ -420,15 +455,17 @@ save(data, file="datalong.RDA")
 
 
 firstvars <- subset(data, syear == firstyear)
-firstvars <- firstvars[, c( "hid", "pid", "failureflag", "d11102ll", "d11104", "d11109", "e11106",
-                           "i11101", "l11101", "l11102", "minage", "firstyear",
-                           "lastyear", "numobs", "birthyear", "firstfailyear", "ll0090", "ll0091")]
+firstvars <- firstvars[, c( "hid", "pid", "failureflag", "d11102ll", "d11104", "d11109", "d11109impute", "e11106",
+                            "i11101", "i11101impute" ,"l11101", "l11102", "minage", "firstyear",
+                            "lastyear", "numobs", "birthyear", "firstfailyear")]
 
 #rename covariates
-names(firstvars) <- c( "hid", "pid", "event", "gender", "married", "yearsedu", "sector",
-                       "hhinc", "state", "region", "minage", "firstyear",
-                       "lastyear", "numobs","birthyear", "firstfailyear", "edumom", "edudad")
+names(firstvars) <- c( "hid", "pid", "event", "gender", "married", "yearsedu", "yearseduimpute", "sector",
+                       "hhinc", "hhincimpuute", "state", "region", "minage", "firstyear",
+                       "lastyear", "numobs","birthyear", "firstfailyear")
 
+#View(firstvars)
+# Looks good, a lot more values after imputation
 #firstvars can be used as wide dataset with time-indep. covariates
 
 #similar pattern of numobs holds in pequiv itself, too
@@ -453,9 +490,9 @@ head(firstvars)
 #create time to event variable
 
 dataw <- mutate(firstvars, 
-                   time = ifelse(firstvars$event==1, 
-                                 firstvars$firstfailyear- firstvars$firstyear +1,
-                                 firstvars$lastyear - firstvars$firstyear +1))
+                time = ifelse(firstvars$event==1, 
+                              firstvars$firstfailyear- firstvars$firstyear +1,
+                              firstvars$lastyear - firstvars$firstyear +1))
 hist(dataw$time)
 dataw$minage <- NULL
 dataw$numobs <- NULL
@@ -479,10 +516,10 @@ rm(other, tvar)
 
 #state of residnce
 dataw$state <- factor(dataw$state, levels=c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16), 
-                     labels=c("Schleswig-Holstein", "Hamburg", "Lower Saxony", "Bremen", "NRW", "Hessia",
-                              "Rhineland-Palatinate", "Baden-Wuerttemberg", "Bavaria", "Saarland",
-                              "Berlin", "Brandenburg", "Mecklenburg-Vorpommern", "Saxony",
-                              "Saxony-Anhalt", "Thuringia"))
+                      labels=c("Schleswig-Holstein", "Hamburg", "Lower Saxony", "Bremen", "NRW", "Hessia",
+                               "Rhineland-Palatinate", "Baden-Wuerttemberg", "Bavaria", "Saarland",
+                               "Berlin", "Brandenburg", "Mecklenburg-Vorpommern", "Saxony",
+                               "Saxony-Anhalt", "Thuringia"))
 #region
 dataw$region <- factor(dataw$region, levels=c(1,2), labels=c("West", "East"))
 
@@ -507,19 +544,6 @@ dataw$sector[dataw$sector<0] <- NA
 save(dataw, file="datawide.RDA")
 ####################################
 
-
-# Imputation ###########################################################################
-
-# Multiple Imputation by Chained Equations
-#with mice package
-
-
-#or just use simple imputation, because only data on hhinc and yearsedu is missing
-#=> maybe can simply take value from other year as much better imputation strategy
-
-
-
-#########################################################################################
 ####################################DESCRIPTIVES#########################################
 #########################################################################################
 
@@ -716,7 +740,6 @@ rm(km.coh2, coh.fit2)
 
 
 
-
 # cox proportional hazard regression #################################################
 
 #survival/rms to estimate models, survminer package for plots and diagnostics
@@ -728,7 +751,7 @@ plot(coxsurv)
 #Cox PH model
 
 #using survival package
-cox.ph <- coxph(coxsurv ~ yearsedu + hhinc + gender + region + married, data=dataw)
+cox.ph <- coxph(coxsurv ~ yearsedu + hhinc + gender + region + married + edumom, data=dataw)
 
 #using rms package
 cox.ph2 <- cph(coxsurv ~ yearsedu + hhinc + gender + region + strat(married), data=dataw,
