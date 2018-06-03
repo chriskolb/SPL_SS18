@@ -425,10 +425,12 @@ save(data, file="datalong.RDA")
 
 
 # If income value is NA take value of next year otherwise of the year after 
+
 setDT(data)[, shiftincome:= lead(i11101), hid]
 setDT(data)[, shift2income:= lead(shiftincome), hid]
 data <- mutate(data, i11101impute = ifelse(data$i11101 <= 0, ifelse(data$shiftincome > 0, data$shiftincome, ifelse(data$shift2income> 0, data$shift2income, NA) ), data$i11101))
-#View(data[,c("hid", "pid", "syear", "i11101", "shiftincome", "shift2income", "i11101impute")])
+View(data[,c("hid", "pid", "syear", "i11101", "shiftincome", "shift2income", "i11101impute")])
+
 
 
 
@@ -436,7 +438,19 @@ data <- mutate(data, i11101impute = ifelse(data$i11101 <= 0, ifelse(data$shiftin
 setDT(data)[, shiftedu:= lead(d11109), hid]
 setDT(data)[, shift2edu:= lead(shiftedu), hid]
 data <- mutate(data, d11109impute = ifelse(data$d11109 <= 0, ifelse(data$shiftedu > 0, data$shiftedu, ifelse(data$shift2edu> 0, data$shift2edu, NA) ), data$d11109))
+
+
+# As only the maximum amount of education is necessary, max impute can be generated
+maxeducation <- aggregate(data$d11109 ~ data$hid, data , function(x) (max(x)))
+names(maxeducation)[names(maxeducation) == "data$d11109"] <- "yearsedumaximputed"
+names(maxeducation)[names(maxeducation) == "data$hid"] <- "hid"
+
+data = inner_join(data, maxeducation, by = "hid")
+#View(maxeducation)
+View(data)
 #View(data[,c("hid", "pid", "syear", "d11109", "shiftedu", "shift2edu", "d11109impute")])
+#data$d11109impute <- NULL
+#names(maxeducation)[names(maxeducation) == "data$hid"] <- "hid"
 
 #Other possibility to be neglected to choose the mean of the income by hid
 #data$hhincimputed <- ifelse(data$i11101 <= 0, aggregate(data$i11101 ~ hid, data, function(x) mean(x)), data$i11101)
@@ -455,12 +469,12 @@ data <- mutate(data, d11109impute = ifelse(data$d11109 <= 0, ifelse(data$shifted
 
 
 firstvars <- subset(data, syear == firstyear)
-firstvars <- firstvars[, c( "hid", "pid", "failureflag", "d11102ll", "d11104", "d11109", "d11109impute", "e11106",
+firstvars <- firstvars[, c( "hid", "pid", "failureflag", "d11102ll", "d11104", "d11109", "d11109impute", "yearsedumaximputed" , "e11106",
                             "i11101", "i11101impute" ,"l11101", "l11102", "minage", "firstyear",
                             "lastyear", "numobs", "birthyear", "firstfailyear")]
 
 #rename covariates
-names(firstvars) <- c( "hid", "pid", "event", "gender", "married", "yearsedu", "yearseduimpute", "sector",
+names(firstvars) <- c( "hid", "pid", "event", "gender", "married", "yearsedu", "yearseduimpute", "yearsedumaximputed" , "sector",
                        "hhinc", "hhincimpuute", "state", "region", "minage", "firstyear",
                        "lastyear", "numobs","birthyear", "firstfailyear")
 
@@ -594,6 +608,9 @@ ggpairs(pairplotcont, lower = list(continuous = "smooth_loess"), diag = list(con
 rm(pairplotcont, pairplotdisc)
 
 # Visualization of missing values in wide dataset #
+# In case of income, a lot of zero values not defined as NA
+dataw$hhinc[dataw$hhinc <= 0] <- NA
+
 #few missings in final data set => no surprise b/c of generated variables
 sapply(dataw, function(x) sum(is.na(x)))
 
@@ -604,7 +621,7 @@ rm(aggr_plot)
 
 gg_miss_fct(x = dataw, fct = firstyear)
 
-
+View(dataw)
 
 
 ##################################################################################
