@@ -1,15 +1,18 @@
-
+#install packages
 install.packages("bigmemory",dependencies=TRUE)
 install.packages("biganalytics",dependencies=TRUE)
 install.packages("dplyr",dependencies=TRUE)
 install.packages("plm")
 install.packages("varhandle")
 install.packages("survival")
-install.packages("haven")
-install.packages("tidyr")
-install.packages("bitops")
+install.packages("rms")
 install.packages("survminer")
-install.packages("rio")
+#<<<<<<< HEAD
+install.packages("Hmisc")
+install.packages("pastecs")
+install.packages("rms")
+install.packages("car",dependencies=TRUE)
+install.packages("rio", dependencies = TRUE)
 
 library(rio) #reading data into R
 library(foreign) 
@@ -27,8 +30,18 @@ library(stats)
 library(survival)
 library(bitops)
 library(haven)
-library(data.table)
 library(plyr) #plyr muss vor dplyr
 library(tidyr)
 library(ggplot2)
 library(dplyr) # das hier immer als letztes du Nase
+#=======
+install.packages("pastecs") #summary stats
+install.packages("Hmisc") #summary stats 
+install.packages(c("rgl", "car"))#scatter3d()
+install.packages("haven")
+install.packages("VIM")
+install.packages("naniar")
+install.packages("ggridges")
+install.packages("GGally")
+install.packages("rio") #loading data
+#>>>>>>> a7620d36db8acaade051accd077914b86493d7a1
