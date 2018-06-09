@@ -1,6 +1,5 @@
-source(.path.R)
-source(packages.R)
-
+source(".path.R")
+source("packages.R")
 
 #git push origin K-Dog
 #memory.limit()
@@ -16,10 +15,10 @@ source(packages.R)
 
 #information on individual (household head) characteristics from pequiv.dta
 
-pequiv <- read_dta("pequiv.dta")
+pequiv <- import("/Users/adreannarodriguez/Desktop/SOEP/SOEP-LONG_v33.1_csv_de/pequiv.csv",setclass = "data.table")
 
 #declare as data table
-pequiv = as.data.table(pequiv)
+#pequiv = as.data.table(pequiv)
 
 #restrict dataset to individuals aged 24 to 65
 #restrict dataset to household heads due to availability of hgowner only on household level
@@ -38,12 +37,12 @@ load(file="pequivsmall.RDA")
 
 #information on household renting/ownership status from hgen.dta
 
-hgen <- read_dta("hgen.dta")
+hgen <- import("/Users/adreannarodriguez/Desktop/SOEP/SOEP-LONG_v33.1_csv_de/hgen.csv",setclass = "data.table")
 
 hgensmall <- select(hgen, one_of(hgenvariables = 
                                    c("cid" , "hid" , "syear", "hgacquis" , "hgowner" , "hgmoveyr", "hgrent")))
 
-#save(hgensmall, file="hgensmall.RDA")
+save(hgensmall, file="hgensmall.RDA")
 #View(hgensmall)
 
 #rm(hgen)
