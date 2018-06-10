@@ -17,3 +17,4 @@ install.packages("ggridges")
 install.packages("GGally")
 install.packages("rio") #loading data
 install.packages("tidyverse")
+install.packages("readr")
