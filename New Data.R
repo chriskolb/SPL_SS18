@@ -621,7 +621,7 @@ rm(aggr_plot)
 
 gg_miss_fct(x = dataw, fct = firstyear)
 
-View(dataw)
+#View(dataw)
 
 
 ##################################################################################
@@ -768,7 +768,7 @@ plot(coxsurv)
 #Cox PH model
 
 #using survival package
-cox.ph <- coxph(coxsurv ~ yearsedu + hhinc + gender + region + married + edumom, data=dataw)
+cox.ph <- coxph(coxsurv ~ yearsedu + hhinc + gender + region + married, data=dataw)
 
 #using rms package
 cox.ph2 <- cph(coxsurv ~ yearsedu + hhinc + gender + region + strat(married), data=dataw,
