@@ -3,7 +3,7 @@
 rm(list=ls())
 #getwd()
 #setwd(path) in path.R
-source(".path.R")
+source("path.R")
 
 #install and load packages
 #source("packages.R")
@@ -21,27 +21,27 @@ source("library.R")
 
 #information on individual (household head) characteristics from pequiv.dta
 
-#pequiv <- read_dta("pequiv.dta")
+pequiv <- read_csv("pequiv.csv")
 
 #declare as data table
-#pequiv = as.data.table(pequiv)
+pequiv = as.data.table(pequiv)
 
 #restrict dataset to individuals aged 24 to 65
-#pequivnew <- subset(pequiv, d11101>23 & d11101<66)
+pequivnew <- subset(pequiv, d11101>23 & d11101<66)
 
 #restrict dataset to household heads due to availability of hgowner only on household level
 
-#pequivnew <- subset(pequivnew, d11105 == 1)
-#pequivnew = as.data.table(pequivnew)
+pequivnew <- subset(pequivnew, d11105 == 1)
+pequivnew = as.data.table(pequivnew)
 
 
-#pequivvariables <- c("pid" , "hid" , "syear" , "d11102ll" , "d11101" , "d11104" , "d11108" , "d11109" ,  "e11106" , "i11101" , "i11103" , "w11102" , "w11103" , "y11101" , "l11101" , "l11102" , "iself" , "ijob1" , "ijob2")
+pequivvariables <- c("pid" , "hid" , "syear" , "d11102ll" , "d11101" , "d11104" , "d11108" , "d11109" ,  "e11106" , "i11101" , "i11103" , "w11102" , "w11103" , "y11101" , "l11101" , "l11102" , "iself" , "ijob1" , "ijob2")
 
-#pequivsmall <- select(pequivnew, one_of(pequivvariables))
+pequivsmall <- select(pequivnew, one_of(pequivvariables))
 
-#save(pequivsmall, file="pequivsmall.RDA")
+save(pequivsmall, file="pequivsmall.RDA")
 
-#rm(pequiv, pequivnew, pequivvariables)
+rm(pequiv, pequivnew, pequivvariables)
 
 ############################################################################################
 #rm(list=ls())
@@ -49,7 +49,7 @@ source("library.R")
 
 #information on household renting/ownership status from hgen.dta
 
-hgen <- read_dta("hgen.dta")
+hgen <- read_csv("hgen.csv")
 
 hgenvariables <- c("cid" , "hid" , "syear", "hgacquis" , "hgowner" , "hgmoveyr", "hgrent")
 
@@ -78,7 +78,7 @@ rm(list=ls())
 
 memory.limit(size=80000)  # Da der Datensatz Riesig ist, bisschen big data skills
 
-pl <- read_dta("pl.dta") 
+pl <- read_csv("pl.csv") 
 #pllabel <- pl %>% map_chr(~attributes(.)$label)
 #View(pllabel)
 # Gibt z.B. noch Variablen bzgl. Erbe damit man da noch genauer Observations entfernen könnte, plb0022: employment Status: Restschuld Haus, Wohnung plc0411, plc0348 Eigentumsanteil Haus, Wohnung
@@ -93,8 +93,8 @@ rm(pl, plvariables)
 #View(plsmall)
 
 ####################################biol#########################################
-#rm(list=ls())
-biol <- read_dta("biol.dta") 
+rm(list=ls())
+biol <- read_csv("biol.csv") 
 #biollabel <- biol %>% map_chr(~attributes(.)$label)
 #View(biollabel)
 #biol: ll0090 (edumom), ll0091 (edudad)
@@ -176,7 +176,7 @@ data = as.data.table(data)
 
 # Data cleaning on merged data set #######################################################
 
-View(data)
+#View(data)
 
 #Mark dissolved households (more than one PID per HID)
 
