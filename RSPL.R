@@ -72,13 +72,6 @@ rm(hgen, hgenvariables)
 
 # Merge Files ########################################################################
 
-#need to remove attributes of identifying variables or otherwise dplyr::inner_join does not work
-
-attributes(pequivsmall$syear) <- NULL
-attributes(pequivsmall$hid) <- NULL
-attributes(hgensmall$syear) <- NULL
-attributes(hgensmall$hid) <- NULL
-
 #unname(pequivsmall$syear, force = TRUE)
 #unname(pequivsmall$hid, force = TRUE)
 #unname(hgensmall$syear, force = TRUE)
