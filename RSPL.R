@@ -7,7 +7,7 @@ rm(list=ls())
 source(".path.R")
 
 #install and load packages
-source("packages.R")
+#source("packages.R")
 source("library.R")
 
 
@@ -37,7 +37,7 @@ pequivsmall <- select(pequivnew, one_of(pequivvariables))
 
 save(pequivsmall, file="pequivsmall.RDA")
 
-rm(pequiv, pequivnew, pequivvariables)
+rm(pequiv, pequivnew, pequivvariables, pequivsmall)
 
 ############################################################################################
 #rm(list=ls())
@@ -48,7 +48,7 @@ rm(pequiv, pequivnew, pequivvariables)
 hgen <- import(paste(path, "hgen.csv" , sep = "/"),setclass = "data.table")
 
 
-hgenvariables <- c("cid" , "hid" , "syear", "hgacquis" , "hgowner" , "hgmoveyr", "hgrent")
+hgenvariables <- c("hid" , "syear", "hgacquis" , "hgowner" , "hgmoveyr", "hgrent")
 
 hgensmall <- select(hgen, one_of(hgenvariables))
 hgensmall = as.data.table(hgensmall)
@@ -57,7 +57,7 @@ hgensmall = as.data.table(hgensmall)
 save(hgensmall, file="hgensmall.RDA")
 #View(hgensmall)
 
-rm(hgen, hgenvariables)
+rm(hgen, hgenvariables, hgensmall )
 
 
 ############################
@@ -73,12 +73,12 @@ rm(hgen, hgenvariables)
 #Additional variables from files with minor importance
 #rm(list=ls())
 
-#memory.limit(size=80000)  # Da der Datensatz Riesig ist, bisschen big data skills
 pl <- import(paste(path, "pl.csv" , sep = "/"),setclass = "data.table")
-#pllabel <- pl %>% map_chr(~attributes(.)$label)
-#View(pllabel)
+
+save(pl, file="pl.RDA")
+
 # Gibt z.B. noch Variablen bzgl. Erbe damit man da noch genauer Observations entfernen könnte, plb0022: employment Status: Restschuld Haus, Wohnung plc0411, plc0348 Eigentumsanteil Haus, Wohnung
-plvariables <- c("cid" ,"pid", "hid" , "syear", "plb0022", "plh0204", "plc0411", "plc0348")
+plvariables <- c("pid", "syear", "plb0022", "plh0204", "plc0411", "plc0348")
 
 plsmall <- select(pl, one_of(plvariables))
 plsmall = as.data.table(plsmall)
@@ -88,13 +88,18 @@ save(plsmall, file="plsmall.RDA")
 rm(pl, plvariables)
 #View(plsmall)
 
-####################################biol#########################################
-rm(list=ls())
-biol <- read_csv("biol.csv") 
-#biollabel <- biol %>% map_chr(~attributes(.)$label)
-#View(biollabel)
-#biol: ll0090 (edumom), ll0091 (edudad)
-biolvariables <- c("cid" , "pid", "hid" , "syear", "ll0090", "ll0091")
+
+###############################################################################
+#information on parents education
+
+# msedu psedu moeglicherweise im bioparen long???
+# immiyear --- was da los mit csv? 
+
+
+biol <- import(paste(path, "biol.csv" , sep = "/"),setclass = "data.table")
+
+#biol: lb0090 (edumom), lb0091 (edudad)
+biolvariables <- c("pid" , "syear", "lb0090", "lb0091")
 
 biolsmall <- select(biol, one_of(biolvariables))
 biolsmall = as.data.table(biolsmall)
@@ -102,11 +107,15 @@ biolsmall = as.data.table(biolsmall)
 save(biolsmall, file="biolsmall.RDA")
 
 
-rm(biol, biolvariables)
-#View(biolsmall)
+rm(biol, biolvariables, biolsmall)
 
-#View(data)
-rm(list=ls())
+###############################################################################
+#pfadl waere schoen!
+
+
+
+
+
 
 ##########################################################################################
 # Merge Files ########################################################################
@@ -114,65 +123,27 @@ load(file="pequivsmall.RDA")
 load(file="hgensmall.RDA")
 load(file="plsmall.RDA")
 load(file="biolsmall.RDA")
+#load(file="bioparensmall.RDA")
+#load(file="ppfadlsmall.RDA")
 
 
-#names(biolsmall)[names(biolsmall) == "hid.x"] <- "hid"
-
-#View(plsmall)
-#need to remove attributes of identifying variables or otherwise dplyr::inner_join does not work
-
-attributes(pequivsmall$syear) <- NULL
-attributes(pequivsmall$hid) <- NULL
-attributes(hgensmall$syear) <- NULL
-attributes(hgensmall$hid) <- NULL
-attributes(plsmall$syear) <- NULL
-attributes(plsmall$pid) <- NULL
-attributes(biolsmall$syear) <- NULL
-attributes(biolsmall$pid) <- NULL
-
-#unname(pequivsmall$syear, force = TRUE)
-#unname(pequivsmall$hid, force = TRUE)
-#unname(hgensmall$syear, force = TRUE)
-#unname(hgensmall$hid, force = TRUE)
-
-
-data = inner_join(pequivsmall, hgensmall, by = c("hid", "syear"))
-
-attributes(data$pid) <- NULL
-#Hier Anwendung von Left Join, da keine Observationen von data verloren werden sollen.
-#######################MERGING PL###################################################
+data = left_join(pequivsmall, hgensmall, by = c("hid", "syear"))
 data = left_join(data, plsmall, by = c("pid", "syear"))
+data = left_join(data, biolsmall, by = c("pid", "syear"))
+##########---------------tbd----------------#############
+#data = left_join(data, bioparensmall, by = c("pid", "syear"))
+#data = left_join(data, pfadlsmall, by = c("pid", "syear"))
 
 names(data)
-#Namen diversifiziert, da mehrere Daten Blätter
-data$cid.y <- NULL
-data$hid.y <- NULL
 
-names(data)[names(data) == "hid.x"] <- "hid"
-names(data)[names(data) == "cid.x"] <- "cid"
-#######################MERGING BIOL###################################################
-
-data = left_join(data, biolsmall, by = c("pid", "syear"))
-#Namen diversifiziert, da mehrere Daten Blätter
-
-data$cid.y <- NULL
-data$hid.y <- NULL
-
-names(data)[names(data) == "hid.x"] <- "hid"
-names(data)[names(data) == "cid.x"] <- "cid"
-
-#View(datatest)
-
-rm(hgensmall, pequivsmall, plsmall, biolsmall)
+rm(hgensmall, pequivsmall, plsmall, biolsmall, bioparensmall, pfadlsmall)
 
 
 data = as.data.table(data)
 
-#anschliessenden Rechnungen müssen noch überarbeitet werden ( hinzufügen der neuen variablen, aber fügt gerne in die variablenlisten hinzu, was ihr gerne noch hättet)
+#######################################################
 
-# Data cleaning on merged data set #######################################################
-
-#View(data)
+# Data cleaning on merged data set 
 
 #Mark dissolved households (more than one PID per HID)
 
@@ -183,19 +154,13 @@ names(dissolvedata)[names(dissolvedata) == "data$pid"] <- "dissolved"
 names(dissolvedata)[names(dissolvedata) == "data$hid"] <- "hid"
 summary(dissolvedata$dissolved)
 
-attributes(dissolvedata$hid) <- NULL
-attributes(data$hid) <- NULL
+data = left_join(data, dissolvedata, by = c("hid"))
 
-View(dissolvedata)
-View(data)
-
-data = inner_join(data, dissolvedata, by = c("hid"))
-
-#table(data$dissolved)
+table(data$dissolved)
 #View(data[,c("hid", "pid", "syear", "dissolved")])
 
 #remove dissolved households from analysis
-#obs go from 247k to 215k, which corresponds to what we expect
+#obs go from 260k to 230k, which corresponds to what we expect
 data <- subset(data, dissolved == 0)
 
 rm(dissolvedata)
@@ -208,7 +173,7 @@ data$inherit[data$hgacquis == 2] <- 1
 table(data$inherit)
 
 #remove observations where inherit=1
-#reduces data from 215k to 201k
+#reduces data from 230k to 216k
 data <- subset(data, inherit == 0)
 
 #age at first observation (minage)
@@ -219,10 +184,10 @@ minage.dat <- aggregate(data$d11101 ~ data$hid, data , function(x) min(x))
 names(minage.dat)[names(minage.dat) == "data$d11101"] <- "minage"
 names(minage.dat)[names(minage.dat) == "data$hid"] <- "hid"
 
+#######################################################
+
 #merge minage variable to dataset
-#print befehl muss rein (oder irgendein anderer)  weil merge ansonsten nicht funktioniert
-#befehle nacheinander ausf?hren funktioniert, aber ganzen minage code auf einmal nicht 
-print("join minage to data")
+
 data = left_join(data, minage.dat, by = "hid")
 summary(data$minage)
 rm(minage.dat)
@@ -230,12 +195,18 @@ rm(minage.dat)
 
 head(data[,c("hid", "syear", "d11101", "minage")])
 
-#minage==25 reduces data from ~201k to <30k !
+#minage==25 reduces data from ~215k to <30k !
 
 #keep only individuals that were surveyed starting before or at age 30
 #reduces dataset from ~210k to 64k
 #reducing to minage<=25 reduces dataset to 29k observations
-data <- subset(data, minage <= 25)
+
+
+
+#---------------- STATA CHECKE WEGEN MINAGE 24 ------------------------#
+
+
+data2 <- subset(data, minage <= 25)
 #View(data)
 
 
@@ -256,7 +227,7 @@ setDT(data)[, laghgowner:= shift(hgowner), hid]
 summary(data$laghgowner)
 #NA for 3.2k out of 26k
 
-
+XXXXXXXXXX
 # change variable indicates type of change in homeownership from last year to current year
 
 #indicator for renting in current period
