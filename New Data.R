@@ -19,7 +19,7 @@ source("library.R")
 
 ############################################################################################
 
-#information on individual (household head) characteristics from pequiv.dta
+#information on individual (household head) characteristics from pequiv
 
 pequiv <- read_csv("pequiv.csv")
 
@@ -62,17 +62,15 @@ save(hgensmall, file="hgensmall.RDA")
 
 rm(hgen, hgenvariables)
 
+###########################################################################################
 
 ############################
 ############################
 ############################
 
 #other data sets include interesting variables:
-#ppfadl: germborn migback
 #pl: plh0204 (willingness to take risks),plb0022 working status
 
-
-###########################################################################################
 #Additional variables from files with minor importance
 rm(list=ls())
 
@@ -95,29 +93,52 @@ rm(pl, plvariables)
 ####################################biol#########################################
 rm(list=ls())
 biol <- read_csv("biol.csv") 
-#biollabel <- biol %>% map_chr(~attributes(.)$label)
-#View(biollabel)
 #biol: ll0090 (edumom), ll0091 (edudad)
-biolvariables <- c("cid" , "pid", "hid" , "syear", "ll0090", "ll0091")
+options(max.print = 3000)
+names(biol)
+biolvariables <- c("cid" , "pid", "hid" , "syear", "lb0090", "lb0091")
 
 biolsmall <- select(biol, one_of(biolvariables))
 biolsmall = as.data.table(biolsmall)
+names(biolsmall)[names(biolsmall) == "lb0091"] <- "edumom"
+names(biolsmall)[names(biolsmall) == "lb0090"] <- "edudad"
 
 save(biolsmall, file="biolsmall.RDA")
 
 
 rm(biol, biolvariables)
 #View(biolsmall)
-
+#names(biolsmall)
 #View(data)
+rm(list=ls())
+
+
+###################################ppfad#########################################
+rm(list=ls())
+ppfad <- read_csv("ppfad.csv") 
+#ppfadl: corigin migback
+ppfadvariables <- c("cid" , "pid", "hid" , "syear", "corigin", "migback")
+
+ppfadsmall <- select(ppfad, one_of(ppfadvariables))
+ppfadsmall = as.data.table(ppfadsmall)
+
+
+save(ppfadsmall, file="ppfadsmall.RDA")
+
+
+rm(ppfad, ppfadvariables)
+View(ppfadsmall)
+
 rm(list=ls())
 
 ##########################################################################################
 # Merge Files ########################################################################
+
 load(file="pequivsmall.RDA")
 load(file="hgensmall.RDA")
 load(file="plsmall.RDA")
 load(file="biolsmall.RDA")
+load(file="ppfadsmall.RDA")
 
 
 #names(biolsmall)[names(biolsmall) == "hid.x"] <- "hid"
@@ -133,6 +154,8 @@ attributes(plsmall$syear) <- NULL
 attributes(plsmall$pid) <- NULL
 attributes(biolsmall$syear) <- NULL
 attributes(biolsmall$pid) <- NULL
+attributes(ppfadsmall$syear) <- NULL
+attributes(ppfadsmall$pid) <- NULL
 
 #unname(pequivsmall$syear, force = TRUE)
 #unname(pequivsmall$hid, force = TRUE)
@@ -140,7 +163,7 @@ attributes(biolsmall$pid) <- NULL
 #unname(hgensmall$hid, force = TRUE)
 
 
-data = inner_join(pequivsmall, hgensmall, by = c("hid", "syear"))
+data = left_join(pequivsmall, hgensmall, by = c("hid", "syear"))
 
 attributes(data$pid) <- NULL
 #Hier Anwendung von Left Join, da keine Observationen von data verloren werden sollen.
@@ -154,7 +177,7 @@ data$hid.y <- NULL
 
 names(data)[names(data) == "hid.x"] <- "hid"
 names(data)[names(data) == "cid.x"] <- "cid"
-#######################MERGING BIOL###################################################
+#######################MERGING BIOL and PPFAD###################################################
 
 data = left_join(data, biolsmall, by = c("pid", "syear"))
 #Namen diversifiziert, da mehrere Daten Blätter
@@ -164,6 +187,10 @@ data$hid.y <- NULL
 
 names(data)[names(data) == "hid.x"] <- "hid"
 names(data)[names(data) == "cid.x"] <- "cid"
+data = left_join(data, ppfadsmall, by = c("pid"))
+data$cid.y <- NULL
+names(data)[names(data) == "cid.x"] <- "cid"
+#names(data)
 
 #View(datatest)
 
@@ -171,7 +198,7 @@ rm(hgensmall, pequivsmall, plsmall, biolsmall)
 
 
 data = as.data.table(data)
-
+names(data)
 #anschliessenden Rechnungen müssen noch überarbeitet werden ( hinzufügen der neuen variablen, aber fügt gerne in die variablenlisten hinzu, was ihr gerne noch hättet)
 
 # Data cleaning on merged data set #######################################################
@@ -412,12 +439,34 @@ names(data)
 
 save(data, file="datalong.RDA")
 
-#View(data)
+#names(data)
 
 # Imputation ###########################################################################
 
 # Multiple Imputation by Chained Equations
 #with mice package
+
+
+# As only the maximum amount of education of the mom is necessary, max impute can be generated for mom
+maxeducationmom <- aggregate(data$edumom ~ data$hid, data , function(x) (max(x)))
+names(maxeducationmom)[names(maxeducationmom) == "data$edumom"] <- "yearsedumaxmomimputed"
+names(maxeducationmom)[names(maxeducationmom) == "data$hid"] <- "hid"
+
+data = left_join(data, maxeducationmom, by = "hid")
+#View(data[,c("hid", "pid", "syear", "edumom", "yearsedumaxmomimputed")])
+data$yearsedumaxmomimputed[data$yearsedumaxmomimputed<0] <- NA
+data$edumom[data$edumom<0] <- NA
+
+
+# As only the maximum amount of education of the dad is necessary, max impute can be generated for dad
+maxeducationdad <- aggregate(data$edudad ~ data$hid, data , function(x) (max(x)))
+names(maxeducationdad)[names(maxeducationdad) == "data$edudad"] <- "yearsedumaxdadimputed"
+names(maxeducationdad)[names(maxeducationdad) == "data$hid"] <- "hid"
+
+data = left_join(data, maxeducationdad, by = "hid")
+#View(data[,c("hid", "pid", "syear", "edudad", "yearsedumaxdadimputed")])
+data$yearsedumaxdadimputed[data$yearsedumaxdadimputed<0] <- NA
+data$edudad[data$edudad<0] <- NA
 
 
 #or just use simple imputation, because only data on hhinc and yearsedu is missing
@@ -445,7 +494,7 @@ maxeducation <- aggregate(data$d11109 ~ data$hid, data , function(x) (max(x)))
 names(maxeducation)[names(maxeducation) == "data$d11109"] <- "yearsedumaximputed"
 names(maxeducation)[names(maxeducation) == "data$hid"] <- "hid"
 
-data = inner_join(data, maxeducation, by = "hid")
+data = left_join(data, maxeducation, by = "hid")
 #View(maxeducation)
 View(data)
 #View(data[,c("hid", "pid", "syear", "d11109", "shiftedu", "shift2edu", "d11109impute")])
@@ -471,12 +520,12 @@ View(data)
 firstvars <- subset(data, syear == firstyear)
 firstvars <- firstvars[, c( "hid", "pid", "failureflag", "d11102ll", "d11104", "d11109", "d11109impute", "yearsedumaximputed" , "e11106",
                             "i11101", "i11101impute" ,"l11101", "l11102", "minage", "firstyear",
-                            "lastyear", "numobs", "birthyear", "firstfailyear")]
+                            "lastyear", "numobs", "birthyear", "firstfailyear", "edumom", "edudad", "migback", "corigin", "yearsedumaxdadimputed", "yearsedumaxmomimputed")]
 
 #rename covariates
 names(firstvars) <- c( "hid", "pid", "event", "gender", "married", "yearsedu", "yearseduimpute", "yearsedumaximputed" , "sector",
                        "hhinc", "hhincimpuute", "state", "region", "minage", "firstyear",
-                       "lastyear", "numobs","birthyear", "firstfailyear")
+                       "lastyear", "numobs","birthyear", "firstfailyear", "edumom", "edudad", "migback", "corigin", "yearsedumaxdadimputed", "yearsedumaxmomimputed")
 
 #View(firstvars)
 # Looks good, a lot more values after imputation
@@ -560,7 +609,7 @@ save(dataw, file="datawide.RDA")
 
 ####################################DESCRIPTIVES#########################################
 #########################################################################################
-
+#names(dataw)
 
 #distribution of time to failure by state
 
@@ -631,13 +680,14 @@ gg_miss_fct(x = dataw, fct = firstyear)
 #TWO ways to create survival objects, as wide (time) or long (tstart, tstop)
 #If long version is used, data is automatically assumed interval censored instead or right-censored
 #Therefore only use wide format (dataw) [some data cleaning was only done on dataw anyways]
+ 
+# KM by migback ####################################################################
+dataw <- mutate(dataw, migback = ifelse(dataw$migback > 1, 1, 0))
 
-# KM by region ####################################################################
-
-wide.fit <- survfit(Surv(time, event, type="right") ~ region, data=dataw)
-
+wide.fit <- survfit(Surv(time, event, type="right") ~ migback, data=dataw)
+View(dataw$migback)
 kmcurve <- ggsurvplot(wide.fit, conf.int=T,
-                      legend.labs=c("West", "East"), legend.title="Region",  
+                      legend.labs=c("No Migration", "Migration"), legend.title="Migration Background",  
                       title="Kaplan-Meier Curve for Survival in Rent", 
                       censor=F,
                       palette = "strata",
