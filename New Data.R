@@ -27,17 +27,21 @@ pequiv <- read_csv("pequiv.csv")
 #pequiv = as.data.table(pequiv)
 
 #restrict dataset to individuals aged 24 to 65
-pequivnew <- pequiv %>% as.data.table(pequiv) %>% filter(d11101>23 & d11101<66)
+pequivnew <- pequiv %>% as.data.table(pequiv) %>% filter(d11101>23 & d11101<66) %>% 
+                        as.data.table(pequivnew)
 
 #restrict dataset to household heads due to availability of hgowner only on household level
 
 pequivnew <- subset(pequivnew, d11105 == 1)
-pequivnew = as.data.table(pequivnew)
+#pequivnew = as.data.table(pequivnew)
 
 
-pequivvariables <- c("pid" , "hid" , "syear" , "d11102ll" , "d11101" , "d11104" , "d11108" , "d11109" ,  "e11106" , "i11101" , "i11103" , "w11102" , "w11103" , "y11101" , "l11101" , "l11102" , "iself" , "ijob1" , "ijob2")
+#pequivvariables <- c("pid" , "hid" , "syear" , "d11102ll" , "d11101" , "d11104" , "d11108" , "d11109" ,  "e11106" , "i11101" , "i11103" , "w11102" , "w11103" , "y11101" , "l11101" , "l11102" , "iself" , "ijob1" , "ijob2")
 
-pequivsmall <- select(pequivnew, one_of(pequivvariables))
+pequivsmall <- pequivnew %>% select(one_of(c("pid" , "hid" , "syear" , "d11102ll" , "d11101" , 
+                                             "d11104" , "d11108" , "d11109" ,  "e11106" , "i11101" , 
+                                             "i11103" , "w11102" , "w11103" , "y11101" , "l11101" , 
+                                             "l11102" , "iself" , "ijob1" , "ijob2")))
 
 save(pequivsmall, file="pequivsmall.RDA")
 
@@ -51,10 +55,10 @@ rm(pequiv, pequivnew, pequivvariables)
 
 hgen <- read_csv("hgen.csv")
 
-hgenvariables <- c("cid" , "hid" , "syear", "hgacquis" , "hgowner" , "hgmoveyr", "hgrent")
+#hgenvariables <- c("cid" , "hid" , "syear", "hgacquis" , "hgowner" , "hgmoveyr", "hgrent")
 
-hgensmall <- select(hgen, one_of(hgenvariables))
-hgensmall = as.data.table(hgensmall)
+hgensmall <- hgen %>% select(one_of(c("cid" , "hid" , "syear", "hgacquis" , "hgowner" , "hgmoveyr", "hgrent"))) %>% 
+             as.data.table(hgensmall)
 
 
 save(hgensmall, file="hgensmall.RDA")
@@ -80,10 +84,10 @@ pl <- read_csv("pl.csv")
 #pllabel <- pl %>% map_chr(~attributes(.)$label)
 #View(pllabel)
 # Gibt z.B. noch Variablen bzgl. Erbe damit man da noch genauer Observations entfernen könnte, plb0022: employment Status: Restschuld Haus, Wohnung plc0411, plc0348 Eigentumsanteil Haus, Wohnung
-plvariables <- c("cid" ,"pid", "hid" , "syear", "plb0022", "plh0204", "plc0411", "plc0348")
+#plvariables <- c("cid" ,"pid", "hid" , "syear", "plb0022", "plh0204", "plc0411", "plc0348")
 
-plsmall <- select(pl, one_of(plvariables))
-plsmall = as.data.table(plsmall)
+plsmall <- pl %>% select(one_of(c("cid" ,"pid", "hid" , "syear", "plb0022", "plh0204", "plc0411", "plc0348"))) %>%
+                  as.data.table(plsmall)
 
 save(plsmall, file="plsmall.RDA")
 
@@ -96,10 +100,10 @@ biol <- read_csv("biol.csv")
 #biol: ll0090 (edumom), ll0091 (edudad)
 options(max.print = 3000)
 names(biol)
-biolvariables <- c("cid" , "pid", "hid" , "syear", "lb0090", "lb0091")
+#biolvariables <- c("cid" , "pid", "hid" , "syear", "lb0090", "lb0091")
 
-biolsmall <- select(biol, one_of(biolvariables))
-biolsmall = as.data.table(biolsmall)
+biolsmall <- biol %>% select( one_of(c("cid" , "pid", "hid" , "syear", "lb0090", "lb0091"))) %>% 
+                      as.data.table(biolsmall)
 names(biolsmall)[names(biolsmall) == "lb0091"] <- "edumom"
 names(biolsmall)[names(biolsmall) == "lb0090"] <- "edudad"
 
@@ -117,17 +121,17 @@ rm(list=ls())
 rm(list=ls())
 ppfad <- read_csv("ppfad.csv") 
 #ppfadl: corigin migback
-ppfadvariables <- c("cid" , "pid", "hid" , "syear", "corigin", "migback")
+#ppfadvariables <- c("cid" , "pid", "hid" , "syear", "corigin", "migback")
 
-ppfadsmall <- select(ppfad, one_of(ppfadvariables))
-ppfadsmall = as.data.table(ppfadsmall)
+ppfadsmall <- select(ppfad, one_of(c("cid" , "pid", "hid" , "syear", "corigin", "migback"))) %>% 
+              as.data.table(ppfadsmall)
 
 
 save(ppfadsmall, file="ppfadsmall.RDA")
 
 
 rm(ppfad, ppfadvariables)
-View(ppfadsmall)
+#View(ppfadsmall)
 
 rm(list=ls())
 
