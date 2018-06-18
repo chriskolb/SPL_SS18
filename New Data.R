@@ -24,10 +24,10 @@ source("library.R")
 pequiv <- read_csv("pequiv.csv")
 
 #declare as data table
-pequiv = as.data.table(pequiv)
+#pequiv = as.data.table(pequiv)
 
 #restrict dataset to individuals aged 24 to 65
-pequivnew <- subset(pequiv, d11101>23 & d11101<66)
+pequivnew <- pequiv %>% as.data.table(pequiv) %>% filter(d11101>23 & d11101<66)
 
 #restrict dataset to household heads due to availability of hgowner only on household level
 
