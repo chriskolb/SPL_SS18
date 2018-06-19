@@ -147,7 +147,7 @@ data = left_join(data, ppfadlsmall, by = c("pid", "syear"))
 
 #names(data)
 
-rm(hgensmall, pequivsmall, pfadlsmall)
+rm(hgensmall, pequivsmall, ppfadlsmall)
 
 
 data = as.data.table(data)
@@ -217,7 +217,7 @@ head(data[,c("hid", "syear", "d11101", "minage")])
 #---------------- STATA CHECKE WEGEN MINAGE 24 ------------------------#
 
 
-data2 <- subset(data, minage <= 25)
+data <- subset(data, minage <= 25)
 #View(data)
 
 
@@ -400,8 +400,8 @@ data$i11101[data$i11101 < 0] <- NA
 
 setDT(data)[, shiftincome:= lead(i11101), hid]
 setDT(data)[, shift2income:= lead(shiftincome), hid]
-data <- mutate(data, hhincimp = ifelse(data$i11101 <= 0, ifelse(data$shiftincome > 0, data$shiftincome, ifelse(data$shift2income> 0, data$shift2income, NA) ), data$i11101))
-#View(data[,c("hid", "pid", "syear", "i11101", "shiftincome", "shift2income", "hhincimp")])
+data <- mutate(data, hhincimpimp = ifelse(data$i11101 <= 0, ifelse(data$shiftincome > 0, data$shiftincome, ifelse(data$shift2income> 0, data$shift2income, NA) ), data$i11101))
+#View(data[,c("hid", "pid", "syear", "i11101", "shiftincome", "shift2income", "hhincimpimp")])
 
 
 
@@ -428,111 +428,103 @@ data$maxedu[data$maxedu == -1] <- NA
 
 save(data, file="datalong.RDA")
 
-
+load("datalong.RDA")
 # wide format ####################################################################
 
 # create time-independenx covariates
 # if covariate is constant over time, no issue
-# for time-changing covariates, take value at syear=firstyear
+# for time-changing covariates, take value at syear=firstyear or imputed values
 
 
-firstvars <- subset(data, syear == firstyear)
-firstvars <- firstvars[, c( "hid", "pid", "failureflag", "d11102ll", "d11104", "d11109", "d11109impute", "yearsedumaximputed" , "e11106",
-                            "i11101", "i11101impute" ,"l11101", "l11102", "minage", "firstyear",
-                            "lastyear", "numobs", "birthyear", "firstfailyear")]
+datfin <- subset(data, syear == firstyear)
+datfin <- datfin[, c( "hid", "pid", "failureflag", "d11102ll", "d11104", "d11109" , "e11106",
+                            "i11101" ,"l11101", "l11102", "minage", "firstyear",
+                            "lastyear", "birthyear", "firstfailyear", "migback", "maxedu", "hhincimpimp")]
 
 #rename covariates
-names(firstvars) <- c( "hid", "pid", "event", "gender", "married", "yearsedu", "yearseduimpute", "yearsedumaximputed" , "sector",
-                       "hhinc", "hhincimpuute", "state", "region", "minage", "firstyear",
-                       "lastyear", "numobs","birthyear", "firstfailyear")
+names(datfin) <- c( "hid", "pid", "event", "gender", "married", "yearsedu", "sector",
+                       "hhincimp", "state", "region", "minage", "firstyear",
+                       "lastyear", "birthyear", "firstfailyear", "migback", "maxedu", "hhincimpimp")
 
 #View(firstvars)
-# Looks good, a lot more values after imputation
-#firstvars can be used as wide dataset with time-indep. covariates
 
-#similar pattern of numobs holds in pequiv itself, too
-#what should we do with households censored at t=0 (numobs=1)? leave in?
-hist(firstvars$numobs)
-summary(firstvars$numobs)
-summary(firstvars$failureflag)
+summary(datfin$event)
 
 
 #sort data set by hid
-firstvars <- firstvars[order(firstvars$hid),]
+datfin <- datfin[order(datfin$hid),]
 
 #create consecutive ID for observation units
-firstvars$id <- seq(length(firstvars$firstyear))
-id2 <- firstvars$id
-firstvars <- cbind( id2, firstvars)
-firstvars$id <- NULL
-names(firstvars)[names(firstvars) == "id2"] <- "id"
+datfin$id <- seq(length(datfin$firstyear))
+id2 <- datfin$id
+datfin <- cbind( id2, datfin)
+datfin$id <- NULL
+names(datfin)[names(datfin) == "id2"] <- "id"
 rm(id2)
-head(firstvars)
+head(datfin)
 
 #create time to event variable
 
-dataw <- mutate(firstvars, 
-                time = ifelse(firstvars$event==1, 
-                              firstvars$firstfailyear- firstvars$firstyear +1,
-                              firstvars$lastyear - firstvars$firstyear +1))
-hist(dataw$time)
-dataw$minage <- NULL
-dataw$numobs <- NULL
-rm(firstvars)
+datfin <- mutate(datfin, 
+                time = ifelse(datfin$event==1, 
+                              datfin$firstfailyear- datfin$firstyear +1,
+                              datfin$lastyear - datfin$firstyear +1))
+hist(datfin$time)
+#datfin$minage <- NULL
+datfin$hid <- NULL
+datfin$pid <- NULL
+
 
 #put time variable in front
 
-tvar <- dataw$time
-other <- select(dataw, one_of(c("id", "pid", "hid")))
-dataw$id <- NULL
-dataw$pid <- NULL
-dataw$hid <- NULL
-dataw <- cbind(tvar, dataw)
-dataw$time <- NULL
-names(dataw)[names(dataw) == "tvar"] <- "time"
-dataw <- cbind(other, dataw)
-rm(other, tvar)
+tvar <- datfin$time
+pnr <- datfin$id
+datfin$id <- NULL
+datfin <- cbind(tvar, datfin)
+datfin$time <- NULL
+names(datfin)[names(datfin) == "tvar"] <- "time"
+datfin <- cbind(pnr, datfin)
+rm(pnr, tvar)
 
 
 #recoding of categorical variables in wide data set
 
 #state of residnce
-dataw$state <- factor(dataw$state, levels=c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16), 
+datfin$state <- factor(datfin$state, levels=c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16), 
                       labels=c("Schleswig-Holstein", "Hamburg", "Lower Saxony", "Bremen", "NRW", "Hessia",
                                "Rhineland-Palatinate", "Baden-Wuerttemberg", "Bavaria", "Saarland",
                                "Berlin", "Brandenburg", "Mecklenburg-Vorpommern", "Saxony",
                                "Saxony-Anhalt", "Thuringia"))
 #region
-dataw$region <- factor(dataw$region, levels=c(1,2), labels=c("West", "East"))
+datfin$region <- factor(datfin$region, levels=c(1,2), labels=c("West", "East"))
 
 #gender
-dataw$gender <- factor(dataw$gender, levels=c(1,2), labels=c("Male", "Female"))
+# 0 = male, 1 = female
+datfin <- mutate(datfin, gender = ifelse(datfin$gender==1,0,1))
 
 #married
-dataw$married[dataw$married != 1] <- 0
-dataw$married <- factor(dataw$married, levels=c(0,1), labels=c("not married", "married"))
+datfin$married[datfin$married != 1] <- 0
 
 #pre-government household income as numeric
-dataw$hhinc <- as.numeric(dataw$hhinc)
+datfin$hhincimpimp <- as.numeric(datfin$hhincimpimp)
 
 #recoding missing data as NA
 
-dataw$yearsedu[dataw$yearsedu<0] <- NA
-dataw$hhinc[dataw$hhinc<0] <- NA
-dataw$sector[dataw$sector<0] <- NA
+datfin$sector[datfin$sector<0] <- NA
 
 
 ####################################
-save(dataw, file="datawide.RDA")
+save(datfin, file="datfinal.RDA")
 ####################################
 
 ####################################DESCRIPTIVES#########################################
 #########################################################################################
-
+#need to check analysis part of script for consistency (esp variable names)
+#add: regional indicators and divorced dummy
 
 #distribution of time to failure by state
 
-dist <- subset(dataw, event==1)
+dist <- subset(datfin, event==1)
 dist$yeargroup <- as.factor(dist$firstyear)
 levels(dist$state)
 hist(dist$time)
@@ -562,10 +554,10 @@ rm(dist)
 
 # Draftmans Plot
 
-pairplotcont <- dataw[, c("hhinc", "yearsedu", "time")]
-pairplotdisc <- dataw[, c("gender", "event", "married", "region")]
+pairplotcont <- datfin[, c("hhincimp", "maxedu", "time")]
+pairplotdisc <- datfin[, c("gender", "event", "married", "region")]
 
-pairs(pairplot, main = "Survival Data", pch = 21, bg = c("red", "blue")[unclass(dataw$region)])
+pairs(pairplot, main = "Survival Data", pch = 21, bg = c("red", "blue")[unclass(datfin$region)])
 
 ggpairs(pairplot, lower = list(continuous = "points", combo = "box", discrete="facetbar"))
 
@@ -577,19 +569,19 @@ rm(pairplotcont, pairplotdisc)
 
 # Visualization of missing values in wide dataset #
 # In case of income, a lot of zero values not defined as NA
-dataw$hhinc[dataw$hhinc <= 0] <- NA
+datfin$hhincimp[datfin$hhincimp <= 0] <- NA
 
 #few missings in final data set => no surprise b/c of generated variables
-sapply(dataw, function(x) sum(is.na(x)))
+sapply(datfin, function(x) sum(is.na(x)))
 
-aggr_plot <- aggr(dataw, col=c('navyblue','red'), numbers=TRUE, sortVars=TRUE,
+aggr_plot <- aggr(datfin, col=c('navyblue','red'), numbers=TRUE, sortVars=TRUE,
                   labels=names(data), cex.axis=.7, gap=3, 
                   ylab=c("Histogram of missing data","Pattern"))
 rm(aggr_plot)
 
-gg_miss_fct(x = dataw, fct = firstyear)
+gg_miss_fct(x = datfin, fct = firstyear)
 
-#View(dataw)
+#View(datfin)
 
 
 ##################################################################################
@@ -598,11 +590,11 @@ gg_miss_fct(x = dataw, fct = firstyear)
 
 #TWO ways to create survival objects, as wide (time) or long (tstart, tstop)
 #If long version is used, data is automatically assumed interval censored instead or right-censored
-#Therefore only use wide format (dataw) [some data cleaning was only done on dataw anyways]
+#Therefore only use wide format (datfin) [some data cleaning was only done on datfin anyways]
 
 # KM by region ####################################################################
 
-wide.fit <- survfit(Surv(time, event, type="right") ~ region, data=dataw)
+wide.fit <- survfit(Surv(time, event, type="right") ~ region, data=datfin)
 
 kmcurve <- ggsurvplot(wide.fit, conf.int=T,
                       legend.labs=c("West", "East"), legend.title="Region",  
@@ -622,13 +614,36 @@ print(kmcurve)
 rm(kmcurve, wide.fit)
 
 
+# KM by migback ####################################################################
+datfin <- mutate(datfin, migback = ifelse(datfin$migback > 1, 1, 0))
+
+wide.fit <- survfit(Surv(time, event, type="right") ~ migback, data=datfin)
+View(datfin$migback)
+kmcurve <- ggsurvplot(wide.fit, conf.int=T,
+                      legend.labs=c("No Migration", "Migration"), legend.title="Migration Background",  
+                      title="Kaplan-Meier Curve for Survival in Rent", 
+                      censor=F,
+                      palette = "strata",
+                      risk.table = T,
+                      pval=TRUE,
+                      risk.table.height=.25,
+                      ylim=c(0,1),
+                      xlim=c(0,30),
+                      surv.median.line="hv",
+                      linetype=c(1,1),
+                      size = 0.5)
+print(kmcurve)
+
+rm(kmcurve, wide.fit)
+
+
 # KM by highinc/lowinc ###########################################################
 
-medinc <- median(as.numeric(dataw$hhinc), na.rm=TRUE)
-dataw <- mutate(dataw, highinc = ifelse(dataw$hhinc > medinc, 1, 0))
-summary(dataw$highinc)
+medinc <- median(as.numeric(datfin$hhincimp), na.rm=TRUE)
+datfin <- mutate(datfin, highinc = ifelse(datfin$hhincimp > medinc, 1, 0))
+summary(datfin$highinc)
 #define survival object and fit KM estimator
-inc.fit <- survfit(Surv(time, event, type="right") ~ highinc, data=dataw)
+inc.fit <- survfit(Surv(time, event, type="right") ~ highinc, data=datfin)
 km.inc <- ggsurvplot(inc.fit, conf.int=T,
                      legend.labs=c("Low", "High"), legend.title="HH Inc.",  
                      title="Kaplan-Meier Curve for Survival in Rent", 
@@ -648,11 +663,11 @@ rm(km.inc, inc.fit, medinc)
 
 # KM by higedu/lowedu ###########################################################
 
-mededu <- median(dataw$yearsedu, na.rm=TRUE)
-dataw <- mutate(dataw, highedu = ifelse(dataw$yearsedu > mededu, 1, 0))
-summary(dataw$highedu)
+mededu <- median(datfin$maxedu, na.rm=TRUE)
+datfin <- mutate(datfin, highedu = ifelse(datfin$maxedu > mededu, 1, 0))
+summary(datfin$highedu)
 #define survival object and fit KM estimator
-edu.fit <- survfit(Surv(time, event, type="right") ~ highedu, data=dataw)
+edu.fit <- survfit(Surv(time, event, type="right") ~ highedu, data=datfin)
 km.edu <- ggsurvplot(edu.fit, conf.int=T,
                      legend.labs=c("Low", "High"), legend.title="Years Educ.",  
                      title="Kaplan-Meier Curve for Survival in Rent", 
@@ -672,11 +687,11 @@ rm(km.edu, edu.fit, mededu)
 
 # KM by cohorts 84-87 and 94-97 #########################################################
 
-dataw <- mutate(dataw, cohort8494 = ifelse (dataw$firstyear<=1987, 1,ifelse(dataw$firstyear>=1994 & dataw$firstyear<=1997, 2, NA)))
-summary(dataw$cohort8494)
-table(dataw$cohort8494)
+datfin <- mutate(datfin, cohort8494 = ifelse (datfin$firstyear<=1987, 1,ifelse(datfin$firstyear>=1994 & datfin$firstyear<=1997, 2, NA)))
+summary(datfin$cohort8494)
+table(datfin$cohort8494)
 #define survival object and fit KM estimator
-coh.fit <- survfit(Surv(time, event, type="right") ~ cohort8494, data=dataw)
+coh.fit <- survfit(Surv(time, event, type="right") ~ cohort8494, data=datfin)
 km.coh <- ggsurvplot(coh.fit, conf.int=T,
                      legend.labs=c("84-87", "94-97"), legend.title="Strata",  
                      title="Kaplan-Meier Curve for Survival in Rent", 
@@ -698,13 +713,13 @@ rm(km.coh, coh.fit)
 
 #cohorts 84-87 and 04-07
 
-dataw <- mutate(dataw, cohort8404 = ifelse
-                (dataw$firstyear>=1984 & dataw$firstyear<=1987, 1,
-                  ifelse(dataw$firstyear>=2004 & dataw$firstyear<=2007, 2, NA)))
-summary(dataw$cohort8404)
-table(dataw$cohort8404)
+datfin <- mutate(datfin, cohort8404 = ifelse
+                (datfin$firstyear>=1984 & datfin$firstyear<=1987, 1,
+                  ifelse(datfin$firstyear>=2004 & datfin$firstyear<=2007, 2, NA)))
+summary(datfin$cohort8404)
+table(datfin$cohort8404)
 #define survival object and fit KM estimator
-coh.fit2 <- survfit(Surv(time, event, type="right") ~ cohort8404, data=dataw)
+coh.fit2 <- survfit(Surv(time, event, type="right") ~ cohort8404, data=datfin)
 km.coh2 <- ggsurvplot(coh.fit2, conf.int=T,
                       legend.labs=c("84-87", "94-97"), legend.title="Strata",  
                       title="Kaplan-Meier Curve for Survival in Rent", 
@@ -730,16 +745,16 @@ rm(km.coh2, coh.fit2)
 #survival/rms to estimate models, survminer package for plots and diagnostics
 
 #define survival object
-coxsurv <- Surv(dataw$time, dataw$event, type="right")
+coxsurv <- Surv(datfin$time, datfin$event, type="right")
 plot(coxsurv)
 
 #Cox PH model
 
 #using survival package
-cox.ph <- coxph(coxsurv ~ yearsedu + hhinc + gender + region + married, data=dataw)
+cox.ph <- coxph(coxsurv ~ maxedu + hhincimp + gender + region + married, data=datfin)
 
 #using rms package
-cox.ph2 <- cph(coxsurv ~ yearsedu + hhinc + gender + region + strat(married), data=dataw,
+cox.ph2 <- cph(coxsurv ~ maxedu + hhincimp + gender + region + strat(married), data=datfin,
                na.rm=FALSE, y=TRUE, x=TRUE)
 
 print(cox.ph)
@@ -755,27 +770,27 @@ ggcoxzph(coxtest)
 #adjusted (for covariates) survival curves from cox model
 
 #by highinc
-medinc <- median(dataw$hhinc, na.rm=TRUE)
-dataw <- mutate(dataw, highinc = ifelse(dataw$hhinc > medinc, 2, 1))
-summary(dataw$highinc)
+medinc <- median(datfin$hhincimp, na.rm=TRUE)
+datfin <- mutate(datfin, highinc = ifelse(datfin$hhincimp > medinc, 2, 1))
+summary(datfin$highinc)
 rm(medinc)
 
-ggadjustedcurves(cox.ph, data = dataw, variable = "highinc")
+ggadjustedcurves(cox.ph, data = datfin, variable = "highinc")
 
 
 #by firstyear
 
-dataw$firstyear <- as.integer(dataw$firstyear)
+datfin$firstyear <- as.integer(datfin$firstyear)
 cu <- c(1984, 1990, 2000, 2010, 2015)
-dataw$yearcut <- cut(dataw$firstyear, cu, dig.lab = min(nchar(cu)))
-ggadjustedcurves(cox.ph, data = dataw, variable="yearcut")
+datfin$yearcut <- cut(datfin$firstyear, cu, dig.lab = min(nchar(cu)))
+ggadjustedcurves(cox.ph, data = datfin, variable="yearcut")
 rm(cu)
 
 rm(cox.ph, cox.ph2, coxtest, coxsurv)
 
 ######!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!##########
 #All of the following are simple KM curves using the long format for survival objects
-#   => long format should not be used anymore, wide is now available (above) from $$dataw
+#   => long format should not be used anymore, wide is now available (above) from $$datfin
 
 
 #create minimal dataset to try out survival functions
