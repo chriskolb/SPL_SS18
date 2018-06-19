@@ -132,7 +132,7 @@ data = left_join(data, plsmall, by = c("pid", "syear"))
 data = left_join(data, biolsmall, by = c("pid", "syear"))
 ##########---------------tbd----------------#############
 #data = left_join(data, bioparensmall, by = c("pid", "syear"))
-#data = left_join(data, pfadlsmall, by = c("pid", "syear"))
+#data = left_join(data, ppfadlsmall, by = c("pid", "syear"))
 
 names(data)
 
@@ -227,7 +227,6 @@ setDT(data)[, laghgowner:= shift(hgowner), hid]
 summary(data$laghgowner)
 #NA for 3.2k out of 26k
 
-XXXXXXXXXX
 # change variable indicates type of change in homeownership from last year to current year
 
 #indicator for renting in current period
