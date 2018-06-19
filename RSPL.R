@@ -1,6 +1,5 @@
-
+getwd()
 #Set-up
-
 rm(list=ls())
 
 #setwd(path) in path.R
@@ -73,19 +72,19 @@ rm(hgen, hgenvariables, hgensmall )
 #Additional variables from files with minor importance
 #rm(list=ls())
 
-pl <- import(paste(path, "pl.csv" , sep = "/"),setclass = "data.table")
+#pl <- import(paste(path, "pl.csv" , sep = "/"),setclass = "data.table")
 
-save(pl, file="pl.RDA")
+#save(pl, file="pl.RDA")
 
 # Gibt z.B. noch Variablen bzgl. Erbe damit man da noch genauer Observations entfernen könnte, plb0022: employment Status: Restschuld Haus, Wohnung plc0411, plc0348 Eigentumsanteil Haus, Wohnung
-plvariables <- c("pid", "syear", "plb0022", "plh0204", "plc0411", "plc0348")
+#plvariables <- c("pid", "syear", "plb0022", "plh0204", "plc0411", "plc0348")
 
-plsmall <- select(pl, one_of(plvariables))
-plsmall = as.data.table(plsmall)
+#plsmall <- select(pl, one_of(plvariables))
+#plsmall = as.data.table(plsmall)
 
-save(plsmall, file="plsmall.RDA")
+#save(plsmall, file="plsmall.RDA")
 
-rm(pl, plvariables)
+#rm(pl, plvariables)
 #View(plsmall)
 
 
@@ -96,47 +95,59 @@ rm(pl, plvariables)
 # immiyear --- was da los mit csv? 
 
 
-biol <- import(paste(path, "biol.csv" , sep = "/"),setclass = "data.table")
+#biol <- import(paste(path, "biol.csv" , sep = "/"),setclass = "data.table")
 
 #biol: lb0090 (edumom), lb0091 (edudad)
-biolvariables <- c("pid" , "syear", "lb0090", "lb0091")
+#biolvariables <- c("pid" , "syear", "lb0090", "lb0091")
 
-biolsmall <- select(biol, one_of(biolvariables))
-biolsmall = as.data.table(biolsmall)
+#biolsmall <- select(biol, one_of(biolvariables))
+#biolsmall = as.data.table(biolsmall)
 
-save(biolsmall, file="biolsmall.RDA")
+#save(biolsmall, file="biolsmall.RDA")
 
 
-rm(biol, biolvariables, biolsmall)
+#rm(biol, biolvariables, biolsmall)
 
 ###############################################################################
-#pfadl waere schoen!
+#information on migration background
+
+
+ppfadl <- import(paste(path, "ppfadl.csv" , sep = "/"),setclass = "data.table")
+
+#ppfadl: migback
+ppfadlvariables <- c("pid", "syear", "migback")
+
+ppfadlsmall <- select(ppfadl, one_of(ppfadlvariables))
+ppfadlsmall = as.data.table(ppfadlsmall)
+
+save(ppfadlsmall, file="ppfadlsmall.RDA")
+
+
+rm(ppfadl, ppfadlvariables, ppfadlsmall)
 
 
 
-
-
+#rm(list=ls())
 
 ##########################################################################################
 # Merge Files ########################################################################
 load(file="pequivsmall.RDA")
 load(file="hgensmall.RDA")
-load(file="plsmall.RDA")
-load(file="biolsmall.RDA")
+load(file="ppfadlsmall.RDA")
+#load(file="plsmall.RDA")
+#load(file="biolsmall.RDA")
 #load(file="bioparensmall.RDA")
-#load(file="ppfadlsmall.RDA")
+
 
 
 data = left_join(pequivsmall, hgensmall, by = c("hid", "syear"))
-data = left_join(data, plsmall, by = c("pid", "syear"))
-data = left_join(data, biolsmall, by = c("pid", "syear"))
-##########---------------tbd----------------#############
-#data = left_join(data, bioparensmall, by = c("pid", "syear"))
-#data = left_join(data, ppfadlsmall, by = c("pid", "syear"))
+data = left_join(data, ppfadlsmall, by = c("pid", "syear"))
+#data = left_join(data, plsmall, by = c("pid", "syear"))
+#data = left_join(data, biolsmall, by = c("pid", "syear"))
 
-names(data)
+#names(data)
 
-rm(hgensmall, pequivsmall, plsmall, biolsmall, bioparensmall, pfadlsmall)
+rm(hgensmall, pequivsmall, pfadlsmall)
 
 
 data = as.data.table(data)
@@ -222,12 +233,13 @@ save(data, file="data.RDA")
 load(file = "data.RDA")
 
 
+
+# change variable indicates type of change in homeownership from last year to current year
+
 # hgowner lagged variable 
 setDT(data)[, laghgowner:= shift(hgowner), hid]
 summary(data$laghgowner)
-#NA for 3.2k out of 26k
-
-# change variable indicates type of change in homeownership from last year to current year
+#NA for 3.2k out of 30
 
 #indicator for renting in current period
 data$rent <- 0
@@ -313,9 +325,6 @@ data$failure2flag[data$failure2flag == -2] <- 1
 data$failure2flag[data$failure2flag == -1] <- 0
 rm(failure2.dat)
 
-#significant portion of failing households go back to rent at some point (4k out of 22k)
-table(data$failureflag, data$failure2flag)
-
 #View(data[,c("hid", "syear", "change", "hgowner", "owner", "rent", "failure", "failureflag", "failure2flag")])
 
 #create birthyear variable
@@ -376,55 +385,48 @@ rm(numev2.dat)
 #View(data[, c("hid", "syear", "hgowner" , "rent", "owner", "change", "failure", "firstyear" , "lastyear", "failureflag", "failure2flag",  "time", "firstfailyear") ])
 names(data)
 
-save(data, file="datalong.RDA")
-
 #View(data)
 
 # Imputation ###########################################################################
 
-# Multiple Imputation by Chained Equations
-#with mice package
+# Impute missings from other year than first year 
 
-
-#or just use simple imputation, because only data on hhinc and yearsedu is missing
-#=> maybe can simply take value from other year as much better imputation strategy
-
-
+# Impute pre government hh income 
 # If income value is NA take value of next year otherwise of the year after 
+
+summary(data$i11101)
+data$i11101[data$i11101 < 0] <- NA
+
 
 setDT(data)[, shiftincome:= lead(i11101), hid]
 setDT(data)[, shift2income:= lead(shiftincome), hid]
-data <- mutate(data, i11101impute = ifelse(data$i11101 <= 0, ifelse(data$shiftincome > 0, data$shiftincome, ifelse(data$shift2income> 0, data$shift2income, NA) ), data$i11101))
-View(data[,c("hid", "pid", "syear", "i11101", "shiftincome", "shift2income", "i11101impute")])
+data <- mutate(data, hhincimp = ifelse(data$i11101 <= 0, ifelse(data$shiftincome > 0, data$shiftincome, ifelse(data$shift2income> 0, data$shift2income, NA) ), data$i11101))
+#View(data[,c("hid", "pid", "syear", "i11101", "shiftincome", "shift2income", "hhincimp")])
 
 
 
-
-# If education value is NA take value of next year otherwise of the year after 
-setDT(data)[, shiftedu:= lead(d11109), hid]
-setDT(data)[, shift2edu:= lead(shiftedu), hid]
-data <- mutate(data, d11109impute = ifelse(data$d11109 <= 0, ifelse(data$shiftedu > 0, data$shiftedu, ifelse(data$shift2edu> 0, data$shift2edu, NA) ), data$d11109))
+# Impute education
+# Recoding of education variable
 
 
 # As only the maximum amount of education is necessary, max impute can be generated
-maxeducation <- aggregate(data$d11109 ~ data$hid, data , function(x) (max(x)))
-names(maxeducation)[names(maxeducation) == "data$d11109"] <- "yearsedumaximputed"
-names(maxeducation)[names(maxeducation) == "data$hid"] <- "hid"
+maxedu.dat <- aggregate(d11109 ~ hid, data, function(x) max(x))
+names(maxedu.dat)[names(maxedu.dat) == "d11109"] <- "maxedu"
+data = left_join(data, maxedu.dat, by = "hid")
+summary(data$maxedu)
+rm(maxedu.dat)
 
-data = inner_join(data, maxeducation, by = "hid")
-#View(maxeducation)
-View(data)
-#View(data[,c("hid", "pid", "syear", "d11109", "shiftedu", "shift2edu", "d11109impute")])
-#data$d11109impute <- NULL
-#names(maxeducation)[names(maxeducation) == "data$hid"] <- "hid"
 
-#Other possibility to be neglected to choose the mean of the income by hid
-#data$hhincimputed <- ifelse(data$i11101 <= 0, aggregate(data$i11101 ~ hid, data, function(x) mean(x)), data$i11101)
-#data <- mutate(data,  hhincimputed = ifelse(data$i11101 <= 0, aggregate(i11101 ~ hid, data, function(x) mean(x)), i11101) , i11101)
-#View(data[,c("hid", "pid", "syear", "i11101", "lagincome")])
+data$maxedu[data$maxedu == -2] <- 0
+data$maxedu[data$maxedu == -1] <- NA
+
+
+
 #########################################################################################
 #########################################################################################
 
+
+save(data, file="datalong.RDA")
 
 
 # wide format ####################################################################
