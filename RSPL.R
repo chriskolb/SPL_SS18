@@ -1,101 +1,172 @@
-source(".path.R")
-source("packages.R")
+#Set-up
+rm(list=ls())
 
-#git push origin K-Dog
-#memory.limit()
-#rm(list=ls())
+#setwd(path) in path.R
+source(".path.R")
+
+#install and load packages
+#source("packages.R")
+source("library.R")
 
 
 #############################################################################################
 ####################  Data cleaning #########################################################
 #############################################################################################
 
-#subsetting pequiv takes too long on my pc
-#I commented out this part and load pequivsmall right away
 
-#information on individual (household head) characteristics from pequiv.dta
+#information on individual (household head) characteristics from pequiv.csv
 
-pequiv <- import("/Users/adreannarodriguez/Desktop/SOEP/SOEP-LONG_v33.1_csv_de/pequiv.csv",setclass = "data.table")
+pequiv <- import(paste(path, "pequiv.csv" , sep = "/"),setclass = "data.table")
 
-#declare as data table
-#pequiv = as.data.table(pequiv)
 
 #restrict dataset to individuals aged 24 to 65
+pequivnew <- subset(pequiv, d11101>23 & d11101<66)
+
 #restrict dataset to household heads due to availability of hgowner only on household level
 
-pequivnew <- as.data.table(subset(pequiv, d11101>23 & d11101<66 & d11105 == 1))
+pequivnew <- subset(pequivnew, d11105 == 1)
+pequivnew = as.data.table(pequivnew)
 
-pequivsmall <- select(pequivnew, one_of( pvar = c("pid" , "hid" , "syear" , "d11102ll" , "d11101" , 
-                                                "d11104" , "d11108" , "d11109" ,  "e11106" , "i11101" , "i11103" , "w11102",
-                                                "w11103" , "y11101" , "l11101" , "l11102" , "iself" , "ijob1" , "ijob2")))
+
+pequivvariables <- c("pid" , "hid" , "syear" , "d11102ll" , "d11101" , "d11104" , "d11108" , "d11109" ,  "e11106" , "i11101" , "i11103" , "w11102" , "w11103" , "y11101" , "l11101" , "l11102" , "iself" , "ijob1" , "ijob2")
+
+pequivsmall <- select(pequivnew, one_of(pequivvariables))
 
 save(pequivsmall, file="pequivsmall.RDA")
 
-#rm(pequiv, pequivnew, pequivvariables)
+rm(pequiv, pequivnew, pequivvariables, pequivsmall)
 
-load(file="pequivsmall.RDA")
+############################################################################################
+#rm(list=ls())
 
-#information on household renting/ownership status from hgen.dta
 
-hgen <- import("/Users/adreannarodriguez/Desktop/SOEP/SOEP-LONG_v33.1_csv_de/hgen.csv",setclass = "data.table")
+#information on household renting/ownership status from hgen.csv
 
-hgensmall <- select(hgen, one_of(hgenvariables = 
-                                   c("cid" , "hid" , "syear", "hgacquis" , "hgowner" , "hgmoveyr", "hgrent")))
+hgen <- import(paste(path, "hgen.csv" , sep = "/"),setclass = "data.table")
+
+
+hgenvariables <- c("hid" , "syear", "hgacquis" , "hgowner" , "hgmoveyr", "hgrent")
+
+hgensmall <- select(hgen, one_of(hgenvariables))
+hgensmall = as.data.table(hgensmall)
+
 
 save(hgensmall, file="hgensmall.RDA")
 #View(hgensmall)
 
-#rm(hgen)
+rm(hgen, hgenvariables, hgensmall )
 
 
-##################################################
-########## Merge Files ###########################
+############################
+############################
+############################
 
-#need to remove attributes of identifying variables or otherwise dplyr::inner_join does not work
-
-attributes(pequivsmall$syear) <-  NULL
-attributes(pequivsmall$hid) <-  NULL 
-attributes(hgensmall$hid) <-  NULL
-attributes(hgensmall$hid) <-  NULL
-
-#unname(pequivsmall$syear, force = TRUE)
-#unname(pequivsmall$hid, force = TRUE)
-#unname(hgensmall$syear, force = TRUE)
-#unname(hgensmall$hid, force = TRUE)
+#other data sets include interesting variables:
+#ppfadl: germborn migback
+#pl: plh0204 (willingness to take risks),plb0022 working status
 
 
+###########################################################################################
+#Additional variables from files with minor importance
+#rm(list=ls())
 
-data <- inner_join(pequivsmall, hgensmall, by = c("hid", "syear"))
+#pl <- import(paste(path, "pl.csv" , sep = "/"),setclass = "data.table")
+
+#save(pl, file="pl.RDA")
+
+# Gibt z.B. noch Variablen bzgl. Erbe damit man da noch genauer Observations entfernen kÃ¶nnte, plb0022: employment Status: Restschuld Haus, Wohnung plc0411, plc0348 Eigentumsanteil Haus, Wohnung
+#plvariables <- c("pid", "syear", "plb0022", "plh0204", "plc0411", "plc0348")
+
+#plsmall <- select(pl, one_of(plvariables))
+#plsmall = as.data.table(plsmall)
+
+#save(plsmall, file="plsmall.RDA")
+
+#rm(pl, plvariables)
+#View(plsmall)
 
 
-#different merging approach:
-merge <- merge(pequivsmall, hgensmall, by.pequivsmall = c("syear","hid"), by.hgensmall = c("syear", "hid"), all = FALSE)
-View(merge)
-
-rm(hgensmall, pequivsmall)
+###############################################################################
+#information on parents education
 
 
-# Data cleaning on merged data set #######################################################
+#biol <- import(paste(path, "biol.csv" , sep = "/"),setclass = "data.table")
+
+#biol: lb0090 (edumom), lb0091 (edudad)
+#biolvariables <- c("pid" , "syear", "lb0090", "lb0091")
+
+#biolsmall <- select(biol, one_of(biolvariables))
+#biolsmall = as.data.table(biolsmall)
+
+#save(biolsmall, file="biolsmall.RDA")
+
+
+#rm(biol, biolvariables, biolsmall)
+
+###############################################################################
+#information on migration background from pffad.csv
+
+
+ppfadl <- import(paste(path, "ppfadl.csv" , sep = "/"),setclass = "data.table")
+
+#ppfadl: migback
+ppfadlvariables <- c("pid", "syear", "migback")
+
+ppfadlsmall <- select(ppfadl, one_of(ppfadlvariables))
+ppfadlsmall = as.data.table(ppfadlsmall)
+
+save(ppfadlsmall, file="ppfadlsmall.RDA")
+
+
+rm(ppfadl, ppfadlvariables, ppfadlsmall)
+
+
+
+#rm(list=ls())
+
+##########################################################################################
+# Merge Files ########################################################################
+load(file="pequivsmall.RDA")
+load(file="hgensmall.RDA")
+load(file="ppfadlsmall.RDA")
+#load(file="plsmall.RDA")
+#load(file="biolsmall.RDA")
+#load(file="bioparensmall.RDA")
+
+
+
+data = left_join(pequivsmall, hgensmall, by = c("hid", "syear"))
+data = left_join(data, ppfadlsmall, by = c("pid", "syear"))
+#data = left_join(data, plsmall, by = c("pid", "syear"))
+#data = left_join(data, biolsmall, by = c("pid", "syear"))
+
+#names(data)
+
+rm(hgensmall, pequivsmall, ppfadlsmall)
+
+
+data = as.data.table(data)
+
+#######################################################
+
+# Data cleaning on merged data set 
 
 #Mark dissolved households (more than one PID per HID)
 
 #compute max(pid)-min(pid) for each household
 #if difference = 0 => household remains undissolved throughout observation period
-dissolvedata <- aggregate(data$pid ~ data$hid, data , function(x) (max(x)-min(x))) 
-names(dissolvedata)[names(dissolvedata) == "data$pid"] = "dissolved"
+dissolvedata <- aggregate(data$pid ~ data$hid, data , function(x) (max(x)-min(x)))
+names(dissolvedata)[names(dissolvedata) == "data$pid"] <- "dissolved"
 names(dissolvedata)[names(dissolvedata) == "data$hid"] <- "hid"
 summary(dissolvedata$dissolved)
-#View(dissolvedata)
 
-attributes(dissolvedata$hid) <- NULL
-attributes(data$hid) <- NULL
-data <-  inner_join(data, dissolvedata, by = "hid")
+data = left_join(data, dissolvedata, by = c("hid"))
 
-#table(data$dissolved)
+table(data$dissolved)
 #View(data[,c("hid", "pid", "syear", "dissolved")])
 
 #remove dissolved households from analysis
-#obs go from 247k to 215k, which corresponds to what we expect
+#obs go from 260k to 230k, which corresponds to what we expect
 data <- subset(data, dissolved == 0)
 
 rm(dissolvedata)
@@ -108,7 +179,7 @@ data$inherit[data$hgacquis == 2] <- 1
 table(data$inherit)
 
 #remove observations where inherit=1
-#reduces data from 215k to 201k
+#reduces data from 230k to 216k
 data <- subset(data, inherit == 0)
 
 #age at first observation (minage)
@@ -119,10 +190,10 @@ minage.dat <- aggregate(data$d11101 ~ data$hid, data , function(x) min(x))
 names(minage.dat)[names(minage.dat) == "data$d11101"] <- "minage"
 names(minage.dat)[names(minage.dat) == "data$hid"] <- "hid"
 
+#######################################################
+
 #merge minage variable to dataset
-#print befehl muss rein (oder irgendein anderer)  weil merge ansonsten nicht funktioniert
-#befehle nacheinander ausführen funktioniert, aber ganzen minage code auf einmal nicht 
-print("join minage to data")
+
 data = left_join(data, minage.dat, by = "hid")
 summary(data$minage)
 rm(minage.dat)
@@ -130,16 +201,25 @@ rm(minage.dat)
 
 head(data[,c("hid", "syear", "d11101", "minage")])
 
-#minage==25 reduces data from ~201k to <30k !
+#minage==25 reduces data from ~215k to <30k !
 
 #keep only individuals that were surveyed starting before or at age 30
 #reduces dataset from ~210k to 64k
-#reducing to minage<=25 reduces dataset to 26k observations
+#reducing to minage<=25 reduces dataset to 29k observations
+
+
+
+#---------------- STATA CHECKE WEGEN MINAGE 24 ------------------------#
+
+
 data <- subset(data, minage <= 25)
 #View(data)
-save(data, file="data.RDA")
-rm(list=ls())
 
+
+#transform hh income to real hh income (in 2010 prices)
+data <- mutate(data, i11101 = i11101/(y11101/100))
+save(data, file="data.RDA")
+#rm(list=ls())
 
 # create indicators and time variables ########################################
 
@@ -148,13 +228,13 @@ rm(list=ls())
 load(file = "data.RDA")
 
 
+
+# change variable indicates type of change in homeownership from last year to current year
+
 # hgowner lagged variable 
 setDT(data)[, laghgowner:= shift(hgowner), hid]
 summary(data$laghgowner)
-#NA for 3.2k out of 26k
-
-
-# change variable indicates type of change in homeownership from last year to current year
+#NA for 3.2k out of 30
 
 #indicator for renting in current period
 data$rent <- 0
@@ -240,9 +320,6 @@ data$failure2flag[data$failure2flag == -2] <- 1
 data$failure2flag[data$failure2flag == -1] <- 0
 rm(failure2.dat)
 
-#significant portion of failing households go back to rent at some point (4k out of 22k)
-table(data$failureflag, data$failure2flag)
-
 #View(data[,c("hid", "syear", "change", "hgowner", "owner", "rent", "failure", "failureflag", "failure2flag")])
 
 #create birthyear variable
@@ -275,9 +352,9 @@ names(first.fail)[names(first.fail) == "syear"] <- "firstfailyear"
 names(first.fail)[names(first.fail) == "time"] <- "firstfailtime"
 names(first.fail)[names(first.fail) == "tstart"] <- "firstfailtstart"
 names(first.fail)[names(first.fail) == "tstop"] <- "firstfailtstop"
-data <- left_join(data, first.fail, by = "hid")
+data = left_join(data, first.fail, by = "hid")
 #households where no failure occurs are assigned NA
-#rm(first.fail)
+rm(first.fail)
 
 #subset data  to only include syear<=firstfailyear and censored units
 data1 <- subset(data, syear <= firstfailyear)
@@ -291,92 +368,243 @@ firstown.dat$firstownflag <- 1
 firstown.dat <- firstown.dat[, c("hid", "firstownflag")]
 data = left_join(data, firstown.dat, by = "hid")
 data <- subset(data, is.na(firstownflag))
-#rm(firstown.dat)
+rm(firstown.dat)
 
 #re-count number of failures per hid
 numev2.dat <- aggregate(failure ~ hid, data, function(x) sum(x))
 names(numev2.dat)[names(numev2.dat) == "failure"] <- "new.numfails"
 data = left_join(data, numev2.dat, by = "hid")
 summary(data$new.numfails)
-#rm(numev2.dat)
+rm(numev2.dat)
 
-View(data[, c("hid", "syear", "hgowner" , "rent", "owner", "change", "failure", 
-              "firstyear" , "lastyear", "failureflag", "failure2flag",  "time", "firstfailyear") ])
+#View(data[, c("hid", "syear", "hgowner" , "rent", "owner", "change", "failure", "firstyear" , "lastyear", "failureflag", "failure2flag",  "time", "firstfailyear") ])
+names(data)
+
+#View(data)
+
+# Imputation ###########################################################################
+
+#imputation musste nochmal überarbeitet werden, income imputation war
+#falsch gemacht und wenn richtig gemacht, gibt nur 2 obs mehr
+
+# Impute missings from other year than first year 
+
+# Impute pre government hh income 
+# If income value is NA take value of next year otherwise of the year after 
+
+summary(data$i11101)
+data$i11101[data$i11101 < 0] <- NA
+
+
+setDT(data)[, shiftincome:= lead(i11101), hid]
+setDT(data)[, shift2income:= lead(shiftincome), hid]
+data <- mutate(data, hhincimp = ifelse(is.na(data$i11101),
+                                       ifelse(is.na(data$shiftincome), ifelse(is.na(data$shift2income), NA , data$shift2income), data$shiftincome ), data$i11101))
+lapply(list(data$i11101, data$hhincimp, data$shiftincome, data$shift2income), summary) 
+#View(data[,c("hid", "pid", "syear", "i11101", "shiftincome", "shift2income", "hhincimp")])
+
+
+
+# Impute education
+
+
+# maximum years of education is superior measure and has fewer missings
+maxedu.dat <- aggregate(d11109 ~ hid, data, function(x) max(x))
+names(maxedu.dat)[names(maxedu.dat) == "d11109"] <- "maxedu"
+data = left_join(data, maxedu.dat, by = "hid")
+summary(data$maxedu)
+rm(maxedu.dat)
+
+
+data$maxedu[data$maxedu == -2] <- 0
+data$maxedu[data$maxedu == -1] <- NA
+
+data$d11109[data$d11109 == -2] <- 0
+data$d11109[data$d11109 == -1] <- NA
+
+lapply(list(data$d11109, data$maxedu), summary) 
+
+
+
+#########################################################################################
+#########################################################################################
 
 
 save(data, file="datalong.RDA")
 
-
+load("datalong.RDA")
 # wide format ####################################################################
 
 # create time-independenx covariates
 # if covariate is constant over time, no issue
-# for time-changing covariates, take value at syear=firstyear
+# for time-changing covariates, take value at syear=firstyear or imputed values
 
 
-firstvars <- subset(data, syear == firstyear)
-firstvars <- firstvars[, c( "hid", "pid", "failureflag", "d11102ll", "d11104", "d11109", "e11106",
-                            "i11101", "l11101", "l11102", "minage", "firstyear",
-                            "lastyear", "numobs", "birthyear", "firstfailyear")]
+datfin <- subset(data, syear == firstyear)
+
+datfinvars <- c("hid", "pid", "failureflag", "d11102ll", "d11104", "d11109" , "e11106",
+                  "i11101" ,"l11101", "l11102", "minage", "firstyear",
+                  "lastyear", "birthyear", "firstfailyear", "migback", "maxedu", "hhincimp")
+
+datfin <- select(datfin, one_of(datfinvars))
+
+rm(datfinvars)
 
 #rename covariates
-names(firstvars) <- c( "hid", "pid", "event", "gender", "married", "yearsedu", "sector",
-                       "hhinc", "state", "region", "minage", "firstyear",
-                       "lastyear", "numobs","birthyear", "firstfailyear")
+names(datfin) <- c( "hid", "pid", "event", "gender", "married", "yearsedu", "sector",
+                       "hhinc2", "state", "region", "minage", "firstyear",
+                       "lastyear", "birthyear", "firstfailyear", "migback", "maxedu", "hhinc")
 
-#firstvars can be used as wide dataset with time-indep. covariates
+#View(firstvars)
 
-#similar pattern of numobs holds in pequiv itself, too
-#what should we do with households censored at t=0 (numobs=1)? leave in?
-hist(firstvars$numobs)
-summary(firstvars$numobs)
-summary(firstvars$failureflag)
+summary(datfin$event)
 
 
 #sort data set by hid
-firstvars <- firstvars[order(firstvars$hid),]
+datfin <- datfin[order(datfin$hid),]
 
 #create consecutive ID for observation units
-firstvars$id <- seq(length(firstvars$firstyear))
-id2 <- firstvars$id
-firstvars <- cbind( id2, firstvars)
-firstvars$id <- NULL
-names(firstvars)[names(firstvars) == "id2"] <- "id"
-#rm(id2)
-head(firstvars)
+datfin$id <- seq(length(datfin$firstyear))
+id2 <- datfin$id
+datfin <- cbind( id2, datfin)
+datfin$id <- NULL
+names(datfin)[names(datfin) == "id2"] <- "id"
+rm(id2)
+head(datfin)
 
 #create time to event variable
 
-dataw <- mutate(firstvars, 
-                time = ifelse(firstvars$event==1, 
-                              firstvars$firstfailyear- firstvars$firstyear +1,
-                              firstvars$lastyear - firstvars$firstyear +1))
-hist(dataw$time) #Alice: Funktioniert bei mir nicht 
-dataw$minage <- NULL
-dataw$numobs <- NULL
-#rm(firstvars)
+datfin <- mutate(datfin, 
+                time = ifelse(datfin$event==1, 
+                              datfin$firstfailyear- datfin$firstyear +1,
+                              datfin$lastyear - datfin$firstyear +1))
+hist(datfin$time)
+#datfin$minage <- NULL
+datfin$hid <- NULL
+datfin$pid <- NULL
+
 
 #put time variable in front
 
-tvar <- dataw$time
-other <- select(dataw, one_of(c("id", "pid", "hid")))
-dataw$id <- NULL
-dataw$pid <- NULL
-dataw$hid <- NULL
-dataw <- cbind(tvar, dataw)
-dataw$time <- NULL
-names(dataw)[names(dataw) == "tvar"] <- "time"
-dataw <- cbind(other, dataw)
-rm(other, tvar)
+tvar <- datfin$time
+pnr <- datfin$id
+datfin$id <- NULL
+datfin <- cbind(tvar, datfin)
+datfin$time <- NULL
+names(datfin)[names(datfin) == "tvar"] <- "time"
+datfin <- cbind(pnr, datfin)
+rm(pnr, tvar)
 
 
-save(dataw, file="datawide.RDA")
+#recoding of categorical variables in wide data set
+
+#state of residnce
+datfin$state <- factor(datfin$state, levels=c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16), 
+                      labels=c("Schleswig-Holstein", "Hamburg", "Lower Saxony", "Bremen", "NRW", "Hessia",
+                               "Rhineland-Palatinate", "Baden-Wuerttemberg", "Bavaria", "Saarland",
+                               "Berlin", "Brandenburg", "Mecklenburg-Vorpommern", "Saxony",
+                               "Saxony-Anhalt", "Thuringia"))
+#region
+datfin$region <- factor(datfin$region, levels=c(1,2), labels=c("West", "East"))
+
+#gender
+# 0 = male, 1 = female
+datfin <- mutate(datfin, gender = ifelse(datfin$gender==1,0,1))
+
+#married
+datfin$married[datfin$married != 1] <- 0
+
+#pre-government household income as numeric
+datfin$hhincimp <- as.numeric(datfin$hhincimp)
+
+#recoding missing data as NA
+
+datfin$sector[datfin$sector<0] <- NA
+
+#migration background
+names(datfin)[names(datfin)=="migback"] <- "mig2"
+datfin <- mutate(datfin, migback = ifelse(datfin$mig2>1,1,0))
+
+####################################
+save(datfin, file="datfinal.RDA")
+####################################
+
+####################################DESCRIPTIVES#########################################
+#########################################################################################
+#need to check analysis part of script for consistency (esp variable names)
+#add: regional indicators and divorced dummy
+
+#distribution of time to failure by state
+
+dist <- subset(datfin, event==1)
+dist$yeargroup <- as.factor(dist$firstyear)
+levels(dist$state)
+hist(dist$time)
+
+ggplot(
+  dist, 
+  aes(x = dist$time, y = dist$state, fill=dist$state)
+) +
+  geom_density_ridges_gradient(
+    aes(fill = ..x..), scale = 2.5, size = 0.3
+  ) +
+  scale_fill_gradientn(
+    colours = c("#0D0887FF", "#CC4678FF", "#F0F921FF"),
+    name = "Duration"
+  )+
+  theme_ridges() +
+  labs(title = 'Density of Time to Event', x = "Time", y = "States")
 
 
+ggplot(dist, aes(x = time, y = state, fill = state)) + 
+  geom_density_ridges(scale = 2.5) + theme_minimal() +
+  scale_fill_cyclical(values = c("blue", "green")) +
+  labs(title = 'Density of Time to Event', x = "Time", y = "States")
 
-# try out wide format survival object:
+rm(dist)
 
-wide.fit <- survfit(Surv(time, event, type="right") ~ region, data=dataw)
+
+# Draftmans Plot
+
+pairplotcont <- datfin[, c("hhincimp", "maxedu", "time")]
+pairplotdisc <- datfin[, c("gender", "event", "married", "region")]
+
+pairs(pairplot, main = "Survival Data", pch = 21, bg = c("red", "blue")[unclass(datfin$region)])
+
+ggpairs(pairplot, lower = list(continuous = "points", combo = "box", discrete="facetbar"))
+
+ggpairs(pairplotdisc, lower = list(discrete="box"))
+
+ggpairs(pairplotcont, lower = list(continuous = "smooth_loess"), diag = list(continuous = "density"))
+
+rm(pairplotcont, pairplotdisc)
+
+# Visualization of missing values in wide dataset #
+# In case of income, a lot of zero values not defined as NA
+datfin$hhincimp[datfin$hhincimp <= 0] <- NA
+
+#few missings in final data set => no surprise b/c of generated variables
+
+
+sapply(datfin, function(x) sum(is.na(x)))
+
+aggr_plot <- aggr(datfin, col=c('navyblue','red'), numbers=TRUE, sortVars=TRUE,
+                  labels=names(datfin), cex.axis=.7, gap=3, 
+                  ylab=c("Histogram of missing data","Pattern"))
+rm(aggr_plot)
+
+gg_miss_fct(x = datfin, fct = firstyear)
+
+#View(datfin)
+
+
+##################################################################################
+#################### ANALYSIS ####################################################
+##################################################################################
+
+# KM by region ####################################################################
+
+wide.fit <- survfit(Surv(time, event, type="right") ~ region, data=datfin)
 
 kmcurve <- ggsurvplot(wide.fit, conf.int=T,
                       legend.labs=c("West", "East"), legend.title="Region",  
@@ -388,26 +616,189 @@ kmcurve <- ggsurvplot(wide.fit, conf.int=T,
                       risk.table.height=.25,
                       ylim=c(0,1),
                       xlim=c(0,30),
-                      surv.median.line="h",
+                      surv.median.line="hv",
                       linetype=c(1,1),
                       size = 0.5)
 print(kmcurve)
 
+rm(kmcurve, wide.fit)
 
-#works fine
 
-##################################################################################
-#################### ANALYSIS ####################################################
-##################################################################################
+# KM by migback ####################################################################
 
-#TWO ways to create survival objects, as wide (time) or long (tstart, tstop)
-#If long version is used, data is automatically assumed interval censored instead or right-censored
-#Maybe need to convert to wide format to declare Surv(time,event)
+wide.fit <- survfit(Surv(time, event, type="right") ~ migback, data=datfin)
+kmcurve <- ggsurvplot(wide.fit, conf.int=T,
+                      legend.labs=c("No", "Yes"), legend.title="Migration Background",  
+                      title="Kaplan-Meier Curve for Survival in Rent", 
+                      censor=F,
+                      palette = "strata",
+                      risk.table = T,
+                      pval=TRUE,
+                      risk.table.height=.25,
+                      ylim=c(0,1),
+                      xlim=c(0,30),
+                      surv.median.line="hv",
+                      linetype=c(1,1),
+                      size = 0.5)
+print(kmcurve)
 
+rm(kmcurve, wide.fit)
+
+
+# KM by highinc/lowinc ###########################################################
+
+medinc <- median(as.numeric(datfin$hhincimp), na.rm=TRUE)
+datfin <- mutate(datfin, highinc = ifelse(datfin$hhincimp > medinc, 1, 0))
+summary(datfin$highinc)
+#define survival object and fit KM estimator
+inc.fit <- survfit(Surv(time, event, type="right") ~ highinc, data=datfin)
+km.inc <- ggsurvplot(inc.fit, conf.int=T,
+                     legend.labs=c("Low", "High"), legend.title="HH Inc.",  
+                     title="Kaplan-Meier Curve for Survival in Rent", 
+                     censor=F,
+                     palette = "strata",
+                     risk.table = T,
+                     pval=TRUE,
+                     risk.table.height=.25,
+                     ylim=c(0,1),
+                     xlim=c(0,30),
+                     surv.median.line="hv",
+                     linetype=c(1,1),
+                     size = 0.5)
+print(km.inc)
+
+rm(km.inc, inc.fit, medinc)
+
+# KM by higedu/lowedu ###########################################################
+
+mededu <- median(datfin$maxedu, na.rm=TRUE)
+datfin <- mutate(datfin, highedu = ifelse(datfin$maxedu > mededu, 1, 0))
+summary(datfin$highedu)
+#define survival object and fit KM estimator
+edu.fit <- survfit(Surv(time, event, type="right") ~ highedu, data=datfin)
+km.edu <- ggsurvplot(edu.fit, conf.int=T,
+                     legend.labs=c("Low", "High"), legend.title="Years Educ.",  
+                     title="Kaplan-Meier Curve for Survival in Rent", 
+                     censor=F,
+                     palette = "strata",
+                     risk.table = T,
+                     pval=TRUE,
+                     risk.table.height=.25,
+                     ylim=c(0,1),
+                     xlim=c(0,30),
+                     surv.median.line="hv",
+                     linetype=c(1,1),
+                     size = 0.5)
+print(km.edu)
+
+rm(km.edu, edu.fit, mededu)
+
+# KM by cohorts 84-87 and 94-97 #########################################################
+
+datfin <- mutate(datfin, cohort8494 = ifelse (datfin$firstyear<=1987, 1,ifelse(datfin$firstyear>=1994 & datfin$firstyear<=1997, 2, NA)))
+summary(datfin$cohort8494)
+table(datfin$cohort8494)
+#define survival object and fit KM estimator
+coh.fit <- survfit(Surv(time, event, type="right") ~ cohort8494, data=datfin)
+km.coh <- ggsurvplot(coh.fit, conf.int=T,
+                     legend.labs=c("84-87", "94-97"), legend.title="Strata",  
+                     title="Kaplan-Meier Curve for Survival in Rent", 
+                     censor=F,
+                     palette = "strata",
+                     risk.table = T,
+                     pval=TRUE,
+                     risk.table.height=.25,
+                     ylim=c(0,1),
+                     xlim=c(0,30),
+                     surv.median.line="hv",
+                     linetype=c(1,1),
+                     size = 0.5)
+print(km.coh)
+
+rm(km.coh, coh.fit)
+
+
+
+#cohorts 84-87 and 04-07
+
+datfin <- mutate(datfin, cohort8404 = ifelse
+                (datfin$firstyear>=1984 & datfin$firstyear<=1987, 1,
+                  ifelse(datfin$firstyear>=2004 & datfin$firstyear<=2007, 2, NA)))
+summary(datfin$cohort8404)
+table(datfin$cohort8404)
+#define survival object and fit KM estimator
+coh.fit2 <- survfit(Surv(time, event, type="right") ~ cohort8404, data=datfin)
+km.coh2 <- ggsurvplot(coh.fit2, conf.int=T,
+                      legend.labs=c("84-87", "94-97"), legend.title="Strata",  
+                      title="Kaplan-Meier Curve for Survival in Rent", 
+                      censor=F,
+                      palette = "strata",
+                      risk.table = T,
+                      pval=TRUE,
+                      risk.table.height=.25,
+                      ylim=c(0,1),
+                      xlim=c(0,30),
+                      surv.median.line="hv",
+                      linetype=c(1,1),
+                      size = 0.5)
+print(km.coh2)
+
+rm(km.coh2, coh.fit2)
+
+
+
+
+# cox proportional hazard regression #################################################
+
+#survival/rms to estimate models, survminer package for plots and diagnostics
+
+#define survival object
+coxsurv <- Surv(datfin$time, datfin$event, type="right")
+plot(coxsurv)
+
+#Cox PH model
+
+#using survival package
+cox.ph <- coxph(coxsurv ~ maxedu + hhincimp + gender + region + married, data=datfin)
+
+#using rms package
+cox.ph2 <- cph(coxsurv ~ maxedu + hhincimp + gender + region + strat(married), data=datfin,
+               na.rm=FALSE, y=TRUE, x=TRUE)
+
+print(cox.ph)
+print(cox.ph2)
+
+#Schoenfeld test of cox ph assumption
+coxtest <- cox.zph(cox.ph)
+coxtest
+#Schoenfeld graphical test of cox ph assumption
+ggcoxzph(coxtest)
+
+
+#adjusted (for covariates) survival curves from cox model
+
+#by highinc
+medinc <- median(datfin$hhincimp, na.rm=TRUE)
+datfin <- mutate(datfin, highinc = ifelse(datfin$hhincimp > medinc, 2, 1))
+summary(datfin$highinc)
+rm(medinc)
+
+ggadjustedcurves(cox.ph, data = datfin, variable = "highinc")
+
+
+#by firstyear
+
+datfin$firstyear <- as.integer(datfin$firstyear)
+cu <- c(1984, 1990, 2000, 2010, 2015)
+datfin$yearcut <- cut(datfin$firstyear, cu, dig.lab = min(nchar(cu)))
+ggadjustedcurves(cox.ph, data = datfin, variable="yearcut")
+rm(cu)
+
+rm(cox.ph, cox.ph2, coxtest, coxsurv)
 
 ######!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!##########
 #All of the following are simple KM curves using the long format for survival objects
-#   => long format should not be used anymore, wide is now available (above) from $$dataw
+#   => long format should not be used anymore, wide is now available (above) from $$datfin
 
 
 #create minimal dataset to try out survival functions
@@ -546,3 +937,7 @@ cumulhaz <- ggsurvplot(min.fit.coh, conf.int=T,
 
 glist <- list(survprob, cumprop, cumulhaz)
 arrange_ggsurvplots(glist, print = TRUE, ncol = 3, nrow = 1)
+
+
+
+
