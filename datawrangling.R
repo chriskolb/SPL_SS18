@@ -442,8 +442,13 @@ data$d11109[data$d11109 == -1] <- NA
 
 lapply(list(data$d11109, data$maxedu), summary) 
 
+#ever divorced
 
-
+data <- data %>% 
+  mutate(divorced = ifelse(d11104==4,1,0)) %>% 
+  group_by(hid) %>% 
+  mutate(ever_div = max(divorced)) %>% 
+  select(-divorced)
 #########################################################################################
 #########################################################################################
 
@@ -462,7 +467,7 @@ datfin <- subset(data, syear == firstyear)
 datfin <- as.data.frame(datfin)
 
 
-datfinvars <- c("hid", "pid", "failureflag", "d11102ll", "d11104", "d11109" , "e11106",
+datfinvars <- c("hid", "pid", "failureflag", "d11102ll", "d11104", "ever_div", "d11109" , "e11106",
                 "i11101" ,"l11101", "l11102", "minage", "firstyear",
                 "lastyear", "birthyear", "firstfailyear", "migback", "maxedu", "hhincimp", "regtyp")
 
@@ -471,7 +476,7 @@ datfin <- select(datfin, one_of(datfinvars))
 rm(datfinvars)
 
 #rename covariates
-names(datfin) <- c( "hid", "pid", "event", "gender", "married", "yearsedu", "sector",
+names(datfin) <- c( "hid", "pid", "event", "gender", "married", "ever_div", "yearsedu", "sector",
                     "hhinc2", "state", "region", "minage", "firstyear",
                     "lastyear", "birthyear", "firstfailyear", "migback", "maxedu", "hhinc", "rural")
 
