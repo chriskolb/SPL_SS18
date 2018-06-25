@@ -421,7 +421,12 @@ colnames(AICs) <- "AIC"
 AICs
 # Exponential and Log-normal have best fit (equal AIC)
 
+
 # plot all curves together
+
+#close graphical windows beforehand 
+dev.off()
+
 
 plot(kapm, conf.int = F, col = "black", main = "KM vs. Cox PH vs. Parametric Distributions",
      xlab = "Time (Years)", ylab = "Proportion of Survivors")
@@ -434,8 +439,7 @@ legend(x = 20, y = 1, legend = c("Kaplan-Meier", "Weibull", "Exponential",
                                   "Gamma", "Log-Normal", "Cox-PH"), lty = 1,
        col = c("black", "#238b45", "#66c2a4", "blue", "#fd8d3c", "red"),
        cex = 1, bty = "n")
-#clear graphical window using
-dev.off()
+
 
 # Random Survival Forests #################################################
 #preliminary version
