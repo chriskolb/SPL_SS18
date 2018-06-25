@@ -5,24 +5,20 @@
 
 rm(list=ls())
 
-#setwd(path) in path.R
+# setwd(path) in path.R
 source(".path.R")
 
-#install and load packages
-#source("packages.R")
+# install and load packages
+# source("packages.R")
 source("library.R")
 
 load("datfinal.RDA")
 
-#Descriptives
+# Descriptives
 #############################################################################
-#############################################################################
-#need to check analysis part of script for consistency (esp variable names)
-#add: regional indicators and divorced dummy
+# distribution of time to failure by state
 
-#distribution of time to failure by state
-
-dist <- subset(datfin, event==1)
+dist <- subset(dat, event==1)
 dist$yeargroup <- as.factor(dist$firstyear)
 levels(dist$state)
 hist(dist$time)
@@ -32,7 +28,7 @@ ggplot(
   aes(x = dist$time, y = dist$state, fill=dist$state)
 ) +
   geom_density_ridges_gradient(
-    aes(fill = ..x..), scale = 2.5, size = 0.3
+    aes(fill = ..x..), scale = 3, size = 0.3
   ) +
   scale_fill_gradientn(
     colours = c("#0D0887FF", "#CC4678FF", "#F0F921FF"),
@@ -49,13 +45,109 @@ ggplot(dist, aes(x = time, y = state, fill = state)) +
 
 rm(dist)
 
+# distribution of hhinc by State
+
+dist <- subset(dat, hhinc<90000)
+dist$yeargroup <- as.factor(dist$firstyear)
+levels(dist$state)
+hist(dist$hhinc)
+
+ggplot(
+  dist, 
+  aes(x = dist$hhinc, y = dist$state, fill=dist$region)
+) +
+  geom_density_ridges_gradient(
+    aes(fill = ..x..), scale = 2.5, size = 0.3
+  ) +
+  scale_fill_gradientn(
+    colours = c("#0D0887FF", "#CC4678FF", "#F0F921FF"),
+    name = "Duration"
+  )+
+  theme_ridges() +
+  labs(title = 'Density of Household Income ', x = "Household Income", y = "States")
+
+
+ggplot(dist, aes(x = hhinc, y = state, fill = state)) + 
+  geom_density_ridges(scale = 2.5) + theme_minimal() +
+  scale_fill_cyclical(values = c("blue", "green")) +
+  labs(title = 'Density of Household Income', x = "Household Income", y = "States")
+
+rm(dist)
+
+
+
+# Distribution of educational attainment by State
+
+
+dist <- subset(dat, event==1)
+dist$yeargroup <- as.factor(dist$firstyear)
+levels(dist$state)
+hist(dist$maxedu)
+
+ggplot(
+  dist, 
+  aes(x = dist$maxeu, y = dist$state, fill=dist$state)
+) +
+  geom_density_ridges_gradient(
+    aes(fill = ..x..), scale = 2.5, size = 0.3
+  ) +
+  scale_fill_gradientn(
+    colours = c("#0D0887FF", "#CC4678FF", "#F0F921FF"),
+    name = "Duration"
+  )+
+  theme_ridges() +
+  labs(title = 'Density of Years of Education', x = "Education", y = "States")
+
+
+ggplot(dist, aes(x = maxedu, y = state, fill = state)) + 
+  geom_density_ridges(scale = 2.5) + theme_minimal() +
+  scale_fill_cyclical(values = c("blue", "green")) +
+  labs(title = 'Density of Years of Education', x = "education", y = "States")
+
+rm(dist)
+
+
+
+
+# area + contour 2d density
+ggplot(dat, aes(x=maxedu, y=hhinc) ) +
+  stat_density_2d(aes(fill = ..level..), geom = "polygon", colour="white",
+                  n=100, h=NULL)
+
+
+# density plots of survival time
+dens.dat <- subset(dat, event==1)
+
+ggplot(dens.dat, aes(x=time)) + 
+  geom_histogram(binwidth = 0.2, aes(fill = ..count..) )
+
+hist(dens.dat$time, breaks = 15, freq = F, xlab = 'Time', ylim = c(0, 0.2), ylab = 'Relative Frequency', main = 'Histogram of Survival Times')
+lines(density(dens.dat$time, na.rm = T, from = 0, to = 30))
+
+hist(dens.dat$time, # histogram
+     col="Dodger Blue", # column color
+     border="black",
+     prob = TRUE, # show densities instead of frequencies
+     xlab = "Time",
+     ylab = "Relative Frequency",
+     xlim = c(0, 30), 
+     ylim = c(0, 0.28),
+     breaks=30,
+     main = "Survival Time Density")
+lines(density(dens.dat$time, from = 0, to = 30), # density plot
+      lwd = 2, # thickness of line
+      col = "red")
+
+
 
 # Draftmans Plot
 
-pairplotcont <- datfin[, c("hhinc", "maxedu", "time")]
-pairplotdisc <- datfin[, c("gender", "event", "married", "region")]
+pairplotcont <- dat[, c("hhinc", "maxedu", "time")]
+pairplotdisc <- dat[, c("gender", "event", "married", "region")]
 
-pairs(pairplot, main = "Survival Data", pch = 21, bg = c("red", "blue")[unclass(datfin$region)])
+pairplot <- dat[, c("time", "event", "hhinc", "maxedu", "migback", "rural")]
+
+pairs(pairplotcont, main = "Survival Data", pch = 21, bg = c("red", "blue")[unclass(dat$region)])
 
 ggpairs(pairplot, lower = list(continuous = "points", combo = "box", discrete="facetbar"))
 
@@ -63,25 +155,26 @@ ggpairs(pairplotdisc, lower = list(discrete="box"))
 
 ggpairs(pairplotcont, lower = list(continuous = "smooth_loess"), diag = list(continuous = "density"))
 
+
 rm(pairplotcont, pairplotdisc)
 
 # Visualization of missing values in wide dataset #
 # In case of income, a lot of zero values not defined as NA
-datfin$hhinc[datfin$hhinc <= 0] <- NA
+dat$hhinc[dat$hhinc < 0] <- NA
 
 #few missings in final data set => no surprise b/c of generated variables
 
 
-sapply(datfin, function(x) sum(is.na(x)))
+sapply(dat, function(x) sum(is.na(x)))
 
-aggr_plot <- aggr(datfin, col=c('navyblue','red'), numbers=TRUE, sortVars=TRUE,
-                  labels=names(datfin), cex.axis=.7, gap=3, 
+aggr_plot <- aggr(dat, col=c('navyblue','red'), numbers=TRUE, sortVars=TRUE,
+                  labels=names(dat), cex.axis=.7, gap=3, 
                   ylab=c("Histogram of missing data","Pattern"))
 rm(aggr_plot)
 
-gg_miss_fct(x = datfin, fct = firstyear)
+gg_miss_fct(x = dat, fct = firstyear)
 
-#View(datfin)
+#View(dat)
 
 
 ##################################################################################
@@ -90,7 +183,7 @@ gg_miss_fct(x = datfin, fct = firstyear)
 
 # KM by region ####################################################################
 
-wide.fit <- survfit(Surv(time, event, type="right") ~ region, data=datfin)
+wide.fit <- survfit(Surv(time, event, type="right") ~ region, data=dat)
 
 kmcurve <- ggsurvplot(wide.fit, conf.int=T,
                       legend.labs=c("West", "East"), legend.title="Region",  
@@ -112,9 +205,9 @@ rm(kmcurve, wide.fit)
 
 # KM by migback ####################################################################
 
-wide.fit <- survfit(Surv(time, event, type="right") ~ migback, data=datfin)
+wide.fit <- survfit(Surv(time, event, type="right") ~ migback, data=dat)
 kmcurve <- ggsurvplot(wide.fit, conf.int=T,
-                      legend.labs=c("No", "Yes"), legend.title="Migration Background",  
+                      legend.labs=c("No", "Yes"), legend.title="Migr. Back.",  
                       title="Kaplan-Meier Curve for Survival in Rent", 
                       censor=F,
                       palette = "strata",
@@ -133,11 +226,11 @@ rm(kmcurve, wide.fit)
 
 # KM by highinc/lowinc ###########################################################
 
-medinc <- median(as.numeric(datfin$hhinc), na.rm=TRUE)
-datfin <- mutate(datfin, highinc = ifelse(datfin$hhinc > medinc, 1, 0))
-summary(datfin$highinc)
+medinc <- median(as.numeric(dat$hhinc), na.rm=TRUE)
+dat <- mutate(dat, highinc = ifelse(dat$hhinc > medinc, 1, 0))
+summary(dat$highinc)
 #define survival object and fit KM estimator
-inc.fit <- survfit(Surv(time, event, type="right") ~ highinc, data=datfin)
+inc.fit <- survfit(Surv(time, event, type="right") ~ highinc, data=dat)
 km.inc <- ggsurvplot(inc.fit, conf.int=T,
                      legend.labs=c("Low", "High"), legend.title="HH Inc.",  
                      title="Kaplan-Meier Curve for Survival in Rent", 
@@ -157,11 +250,11 @@ rm(km.inc, inc.fit, medinc)
 
 # KM by higedu/lowedu ###########################################################
 
-mededu <- median(datfin$maxedu, na.rm=TRUE)
-datfin <- mutate(datfin, highedu = ifelse(datfin$maxedu > mededu, 1, 0))
-summary(datfin$highedu)
+mededu <- median(dat$maxedu, na.rm=TRUE)
+dat <- mutate(dat, highedu = ifelse(dat$maxedu > mededu, 1, 0))
+summary(dat$highedu)
 #define survival object and fit KM estimator
-edu.fit <- survfit(Surv(time, event, type="right") ~ highedu, data=datfin)
+edu.fit <- survfit(Surv(time, event, type="right") ~ highedu, data=dat)
 km.edu <- ggsurvplot(edu.fit, conf.int=T,
                      legend.labs=c("Low", "High"), legend.title="Years Educ.",  
                      title="Kaplan-Meier Curve for Survival in Rent", 
@@ -181,11 +274,11 @@ rm(km.edu, edu.fit, mededu)
 
 # KM by cohorts 84-87 and 94-97 #########################################################
 
-datfin <- mutate(datfin, cohort8494 = ifelse (datfin$firstyear<=1987, 1,ifelse(datfin$firstyear>=1994 & datfin$firstyear<=1997, 2, NA)))
-summary(datfin$cohort8494)
-table(datfin$cohort8494)
+dat <- mutate(dat, cohort8494 = ifelse (dat$firstyear<=1987, 1,ifelse(dat$firstyear>=1994 & dat$firstyear<=1997, 2, NA)))
+summary(dat$cohort8494)
+table(dat$cohort8494)
 #define survival object and fit KM estimator
-coh.fit <- survfit(Surv(time, event, type="right") ~ cohort8494, data=datfin)
+coh.fit <- survfit(Surv(time, event, type="right") ~ cohort8494, data=dat)
 km.coh <- ggsurvplot(coh.fit, conf.int=T,
                      legend.labs=c("84-87", "94-97"), legend.title="Strata",  
                      title="Kaplan-Meier Curve for Survival in Rent", 
@@ -207,13 +300,13 @@ rm(km.coh, coh.fit)
 
 #cohorts 84-87 and 04-07
 
-datfin <- mutate(datfin, cohort8404 = ifelse
-                (datfin$firstyear>=1984 & datfin$firstyear<=1987, 1,
-                  ifelse(datfin$firstyear>=2004 & datfin$firstyear<=2007, 2, NA)))
-summary(datfin$cohort8404)
-table(datfin$cohort8404)
+dat <- mutate(dat, cohort8404 = ifelse
+                (dat$firstyear>=1984 & dat$firstyear<=1987, 1,
+                  ifelse(dat$firstyear>=2004 & dat$firstyear<=2007, 2, NA)))
+summary(dat$cohort8404)
+table(dat$cohort8404)
 #define survival object and fit KM estimator
-coh.fit2 <- survfit(Surv(time, event, type="right") ~ cohort8404, data=datfin)
+coh.fit2 <- survfit(Surv(time, event, type="right") ~ cohort8404, data=dat)
 km.coh2 <- ggsurvplot(coh.fit2, conf.int=T,
                       legend.labs=c("84-87", "94-97"), legend.title="Strata",  
                       title="Kaplan-Meier Curve for Survival in Rent", 
@@ -239,16 +332,19 @@ rm(km.coh2, coh.fit2)
 #survival/rms to estimate models, survminer package for plots and diagnostics
 
 #define survival object
-coxsurv <- Surv(datfin$time, datfin$event, type="right")
+coxsurv <- Surv(dat$time, dat$event, type="right")
 plot(coxsurv)
 
 #Cox PH model
 
 #using survival package
-cox.ph <- coxph(coxsurv ~ maxedu + hhinc + gender + region + married, data=datfin)
+cox.ph <- coxph(coxsurv ~ hhinc + rural + maxedu + region + migback + married , data=dat)
+
+cox.ph <- coxph(coxsurv ~ hhinc + rural + maxedu + region + migback , data=dat)
+print(cox.ph)
 
 #using rms package
-cox.ph2 <- cph(coxsurv ~ maxedu + hhinc + gender + region + strat(married), data=datfin,
+cox.ph2 <- cph(ccoxsurv ~ hhinc + rural + maxedu + region + migback + married , data=dat,
                na.rm=FALSE, y=TRUE, x=TRUE)
 
 print(cox.ph)
@@ -264,27 +360,108 @@ ggcoxzph(coxtest)
 #adjusted (for covariates) survival curves from cox model
 
 #by highinc
-medinc <- median(datfin$hhinc, na.rm=TRUE)
-datfin <- mutate(datfin, highinc = ifelse(datfin$hhinc > medinc, 2, 1))
-summary(datfin$highinc)
+medinc <- median(dat$hhinc, na.rm=TRUE)
+dat <- mutate(dat, highinc = ifelse(dat$hhinc > medinc, 2, 1))
+summary(dat$highinc)
 rm(medinc)
 
-ggadjustedcurves(cox.ph, data = datfin, variable = "highinc")
+ggadjustedcurves(cox.ph, data = dat, variable = "highinc")
 
 
 #by firstyear
 
-datfin$firstyear <- as.integer(datfin$firstyear)
+dat$firstyear <- as.integer(dat$firstyear)
 cu <- c(1984, 1990, 2000, 2010, 2015)
-datfin$yearcut <- cut(datfin$firstyear, cu, dig.lab = min(nchar(cu)))
-ggadjustedcurves(cox.ph, data = datfin, variable="yearcut")
+dat$yearcut <- cut(dat$firstyear, cu, dig.lab = min(nchar(cu)))
+ggadjustedcurves(cox.ph, data = dat, variable="yearcut")
 rm(cu)
 
 rm(cox.ph, cox.ph2, coxtest, coxsurv)
 
-######!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!##########
+
+
+##################################################################################################
+# KM, Cox PH and Parametric distributions plot #######################################################
+##################################################################################################
+
+# define survival object
+coxparm <- Surv(dat$time, dat$event, type="right")
+
+# define model formula
+parmform <- coxparm ~ hhinc + rural + maxedu + region + migback + married + ever_div
+
+# Kaplan-Meier estimator
+kapm <- survfit(coxparm ~ 1, data=dat)
+
+# Cox PH model
+cox.ph <- coxph(formula=parmform, data=dat)
+summary(cox.ph)
+
+# Weibull distribution
+weibull <- flexsurvreg(formula = parmform, data = dat, dist = "weibull")
+
+# Exponential distribution
+exp <- flexsurvreg(formula = parmform, data = dat, dist = "exp")
+
+# Gamma distribution
+gamma <- flexsurvreg(formula = parmform, data = dat, dist = "gamma")
+
+# Log-normal distribution
+lnormal <- exp <- flexsurvreg(formula = parmform, data = dat, dist = "lnorm")
+
+# AIC for parametric models (model selection)
+
+AICs <- matrix(data = NA, nrow = 4, ncol = 1)
+AICs[1, 1] <- weibull$AIC
+AICs[2, 1] <- exp$AIC
+AICs[3, 1] <- gamma$AIC
+AICs[4, 1] <- lnormal$AIC
+rownames(AICs) <- c("Weibull", "Exponential", "Gamma", "Log-Normal")
+colnames(AICs) <- "AIC"
+AICs
+# Exponential and Log-normal have best fit (equal AIC)
+
+# plot all curves together
+
+plot(kapm, conf.int = F, col = "black", main = "KM vs. Cox PH vs. Parametric Distributions",
+     xlab = "Time (Days)", ylab = "Proportion of Survivors")
+lines(weibull, col = "#238b45", ci = F)
+lines(exp, col = "#66c2a4", ci = F)
+lines(gamma, col = "blue", ci = F)
+lines(lnormal, col = "#fd8d3c", ci = F)
+lines(survfit(cox.ph, conf.int = F), col = "red")
+legend(x = 20, y = 1, legend = c("Kaplan-Meier", "Weibull", "Exponential",
+                                  "Gamma", "Log-Normal", "Cox-PH"), lty = 1,
+       col = c("black", "#238b45", "#66c2a4", "blue", "#fd8d3c", "red"),
+       cex = 1, bty = "n")
+#clear graphical window using
+dev.off()
+
+# Random Survival Forests #################################################
+#preliminary version
+
+fitform <- Surv(time, event) ~ hhinc + rural + maxedu + region + migback
+
+set.seed(0692)
+rsf <- rfsrc(fitform, data = dat, forest = TRUE, ntree = 500, importance = TRUE)
+print(rsf)
+
+
+#ggRFsrc <- plot(gg_rfsrc(rsf), alpha = 0.2)
+#show(ggRFsrc)
+
+plot(gg_rfsrc(rsf, by = "region"))
+
+plot(gg_rfsrc(rsf, by = "migback"))
+
+
+
+#################################################################################################
+# OLD Analysis in long data set #################################################################
+#################################################################################################
+
 #All of the following are simple KM curves using the long format for survival objects
-#   => long format should not be used anymore, wide is now available (above) from $$datfin
+#   => long format should not be used anymore, wide is now available (above) from $$dat
 
 
 #create minimal dataset to try out survival functions
