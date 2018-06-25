@@ -424,7 +424,7 @@ AICs
 # plot all curves together
 
 plot(kapm, conf.int = F, col = "black", main = "KM vs. Cox PH vs. Parametric Distributions",
-     xlab = "Time (Days)", ylab = "Proportion of Survivors")
+     xlab = "Time (Years)", ylab = "Proportion of Survivors")
 lines(weibull, col = "#238b45", ci = F)
 lines(exp, col = "#66c2a4", ci = F)
 lines(gamma, col = "blue", ci = F)
