@@ -181,6 +181,21 @@ gg_miss_fct(x = dat, fct = firstyear)
 #################### ANALYSIS ####################################################
 ##################################################################################
 
+# Things to do:
+# Classic nonparametric estimators:
+# KM, Nelson-Aalen/Fleming-Harrington comparison for overall group
+# CDF, Survival function, cumulative hazard function for both estimators
+# KM by strata (most interesting ones migback, highinc etc.)
+# Cox PH regression:
+# results table, plot overall, ggadjust plots, schoenfeld test plot, hazard ratios, other
+# Comparison Parametric Models and Cox PH / KM:
+# Coefficient table for different distributions and Cox PH in comparison, AICs table
+# Plot comparing Cox PH, KM, and parametric models
+# Random Survival Forest:
+# survival function plots, plots for different strata, concordance index between models,
+# prediction error curve, partial dependence surface, VIMP (variable importance)
+# ggRandomForests
+
 # KM by region ####################################################################
 
 wide.fit <- survfit(Surv(time, event, type="right") ~ region, data=dat)
