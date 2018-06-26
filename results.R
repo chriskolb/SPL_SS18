@@ -189,9 +189,9 @@ gg_miss_fct(x = dat, fct = firstyear)
 # Cox PH regression:
 # results table, plot overall, ggadjust plots, schoenfeld test plot, hazard ratios, other
 # Comparison Parametric Models and Cox PH / KM:
-# Coefficient table for different distributions and Cox PH in comparison, AICs table
-# Plot comparing Cox PH, KM, and parametric models
-# Random Survival Forest:
+# Coefficient table for different distributions and Cox PH in comparison, AICs table (done)
+# Plot comparing Cox PH, KM, and parametric models (done)
+# Mordern nonparametric estimator: random survival forest:
 # survival function plots, plots for different strata, concordance index between models,
 # prediction error curve, partial dependence surface, VIMP (variable importance)
 # ggRandomForests
@@ -396,64 +396,149 @@ rm(cox.ph, cox.ph2, coxtest, coxsurv)
 
 
 ##################################################################################################
-# KM, Cox PH and Parametric distributions plot #######################################################
+# KM, Cox PH and Parametric distributions plot ###################################################
 ##################################################################################################
 
 # define survival object
 coxparm <- Surv(dat$time, dat$event, type="right")
 
 # define model formula
-parmform <- coxparm ~ hhinc + rural + maxedu + region + migback + married + ever_div
+parmform <- as.formula("coxparm ~ hhinc + rural + maxedu + region + migback + married + ever_div")
 
 # Kaplan-Meier estimator
 kapm <- survfit(coxparm ~ 1, data=dat)
+
+# fortify puts survival table into from kapm object in data frame
+kap.dat <- fortify(kapm)
 
 # Cox PH model
 cox.ph <- coxph(formula=parmform, data=dat)
 summary(cox.ph)
 
+# fortify cox model output
+cox.dat <- fortify(survfit(cox.ph, conf.int = F))
+
+# Flexible splines (Royston and Parmar 2002)
+flex.spline <- flexsurvspline(coxparm ~ 1, data = dat, k = 2, scale = "odds")
+
 # Weibull distribution
 weibull <- flexsurvreg(formula = parmform, data = dat, dist = "weibull")
 
 # Exponential distribution
-exp <- flexsurvreg(formula = parmform, data = dat, dist = "exp")
+expo <- flexsurvreg(formula = parmform, data = dat, dist = "exp")
 
-# Gamma distribution
-gamma <- flexsurvreg(formula = parmform, data = dat, dist = "gamma")
+# Log-Logistic distribution
+loglog <- flexsurvreg(formula = parmform, data = dat, dist = "llogis")
 
 # Log-normal distribution
-lnormal <- exp <- flexsurvreg(formula = parmform, data = dat, dist = "lnorm")
+lnormal <- flexsurvreg(formula = parmform, data = dat, dist = "lnorm")
+
+
+# plot all curves together
+
+# graph approach 1 (from rpubs paper)
+# plot for Cox PH model is (by default) at average of covariates
+grid.arrange(
+  ggplot(data.frame(summary(expo)), aes(x = time)) + 
+    geom_line(aes(y = est, col = "Exponential")) +
+    geom_line(data = data.frame(summary(weibull)), aes(y = est, col = "Weibull")) +
+    geom_line(data = data.frame(summary(loglog)), aes(y = est, col = "Log-Logistic")) +
+    geom_line(data = data.frame(summary(lnormal)), aes(y = est, col = "Log-Normal")) +
+    geom_line(data = data.frame(summary(flex.spline)), aes(y = est, col = "Flexible Splines")) +
+    geom_step(data = kap.dat, aes(x=time, y=surv, colour = "Kaplan-Meier"), size = 0.37)+
+    geom_step(data = cox.dat, aes(x=time, y=surv, colour = "Cox PH"), size = 0.37)+
+    labs(x = "Time (years)", y = "Survival Probability", col = "Models") + theme_classic(),
+  ggplot(data.frame(summary(expo, type = "hazard")), aes(x = time)) + 
+    geom_line(aes(y = est, col = "Exponential")) +
+    geom_line(data = data.frame(summary(weibull, type = "hazard")), aes(y = est, col = "Weibull")) +
+    geom_line(data = data.frame(summary(loglog, type = "hazard")), aes(y = est, col = "Log-Logistic")) +
+    geom_line(data = data.frame(summary(lnormal, type = "hazard")), aes(y = est, col = "Log-Normal")) +
+    geom_line(data = data.frame(summary(flex.spline, type = "hazard")), aes(y = est, col = "Flexible Splines")) +
+    labs(x = "Time (years)", y = "Hazard Function", col = "Models") + theme_classic(),
+  ncol = 2
+)
+
+# only survival curves as single plot
+ggplot(data.frame(summary(expo)), aes(x = time)) + 
+  geom_line(aes(y = est, col = "Exponential")) +
+  geom_line(data = data.frame(summary(weibull)), aes(y = est, col = "Weibull")) +
+  geom_line(data = data.frame(summary(loglog)), aes(y = est, col = "Log-Logistic")) +
+  geom_line(data = data.frame(summary(lnormal)), aes(y = est, col = "Log-Normal")) +
+  geom_line(data = data.frame(summary(flex.spline)), aes(y = est, col = "Flexible Splines")) +
+  geom_step(data = kap.dat, aes(x=time, y=surv, colour = "Kaplan-Meier"), size = 0.37)+
+  geom_step(data = cox.dat, aes(x=time, y=surv, colour = "Cox PH"), size = 0.37)+
+  labs(x = "Time (years)", y = "Survival Probability", col = "Models") + theme_classic()
+
+# only hazard functions as single plot
+ggplot(data.frame(summary(expo, type = "hazard")), aes(x = time)) + 
+  geom_line(aes(y = est, col = "Exponential")) +
+  geom_line(data = data.frame(summary(weibull, type = "hazard")), aes(y = est, col = "Weibull")) +
+  geom_line(data = data.frame(summary(loglog, type = "hazard")), aes(y = est, col = "Log-Logistic")) +
+  geom_line(data = data.frame(summary(lnormal, type = "hazard")), aes(y = est, col = "Log-Normal")) +
+  geom_line(data = data.frame(summary(flex.spline, type = "hazard")), aes(y = est, col = "Flexible Splines")) +
+  labs(x = "Time (years)", y = "Hazard Function", col = "Models") + theme_classic()
+
+
+
 
 # AIC for parametric models (model selection)
 
 AICs <- matrix(data = NA, nrow = 4, ncol = 1)
 AICs[1, 1] <- weibull$AIC
-AICs[2, 1] <- exp$AIC
-AICs[3, 1] <- gamma$AIC
+AICs[2, 1] <- expo$AIC
+AICs[3, 1] <- loglog$AIC
 AICs[4, 1] <- lnormal$AIC
-rownames(AICs) <- c("Weibull", "Exponential", "Gamma", "Log-Normal")
+rownames(AICs) <- c("Weibull", "Exponential", "Log-Logistic", "Log-Normal")
 colnames(AICs) <- "AIC"
 AICs
-# Exponential and Log-normal have best fit (equal AIC)
+#Log-normal has best fit
 
 
-# plot all curves together
+##################################################################################################
+# Cox PH and Parametric distributions tables #####################################################
+##################################################################################################
 
-#close graphical windows beforehand 
-dev.off()
+# stargazer only compatible with survreg, not flexsurvreg
+
+# define survival object
+coxparm <- Surv(dat$time, dat$event, type="right")
+
+# define model formula
+parmform <- as.formula("coxparm ~ hhinc + rural + maxedu + region + migback + married + ever_div")
+
+# Cox PH model
+cox.ph.tab <- coxph(formula=parmform, data=dat)
+summary(cox.ph.tab)
+
+# Weibull distribution
+weibull.tab <- survreg(formula = parmform, data = dat, dist = "weibull")
+
+# Exponential distribution
+expo.tab <- survreg(formula = parmform, data = dat, dist = "exp")
+
+# Log-Logistic distribution
+loglog.tab <- survreg(formula = parmform, data = dat, dist = "loglogistic")
+
+# Log-normal distribution
+lnormal.tab <- survreg(formula = parmform, data = dat, dist = "lognormal")
 
 
-plot(kapm, conf.int = F, col = "black", main = "KM vs. Cox PH vs. Parametric Distributions",
-     xlab = "Time (Years)", ylab = "Proportion of Survivors")
-lines(weibull, col = "#238b45", ci = F)
-lines(exp, col = "#66c2a4", ci = F)
-lines(gamma, col = "blue", ci = F)
-lines(lnormal, col = "#fd8d3c", ci = F)
-lines(survfit(cox.ph, conf.int = F), col = "red")
-legend(x = 20, y = 1, legend = c("Kaplan-Meier", "Weibull", "Exponential",
-                                  "Gamma", "Log-Normal", "Cox-PH"), lty = 1,
-       col = c("black", "#238b45", "#66c2a4", "blue", "#fd8d3c", "red"),
-       cex = 1, bty = "n")
+# Results table (nees more options maybe)
+# should maybe be odds ratios/relative risk/sth instead of coefficients
+stargazer(cox.ph.tab, weibull.tab, expo.tab, loglog.tab, lnormal.tab, align=F)
+
+
+# AIC for parametric models (model selection)
+
+AICs <- matrix(data = NA, nrow = 4, ncol = 1)
+AICs[1, 1] <- weibull$AIC
+AICs[2, 1] <- expo$AIC
+AICs[3, 1] <- loglog$AIC
+AICs[4, 1] <- lnormal$AIC
+rownames(AICs) <- c("Weibull", "Exponential", "Log-Logistic", "Log-Normal")
+colnames(AICs) <- "AIC"
+AICs
+#Log-normal has best fit
 
 
 # Random Survival Forests #################################################
