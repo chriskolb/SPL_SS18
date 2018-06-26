@@ -394,7 +394,6 @@ rm(cu)
 rm(cox.ph, cox.ph2, coxtest, coxsurv)
 
 
-
 ##################################################################################################
 # KM, Cox PH and Parametric distributions plot ###################################################
 ##################################################################################################
@@ -478,20 +477,6 @@ ggplot(data.frame(summary(expo, type = "hazard")), aes(x = time)) +
   geom_line(data = data.frame(summary(flex.spline, type = "hazard")), aes(y = est, col = "Flexible Splines")) +
   labs(x = "Time (years)", y = "Hazard Function", col = "Models") + theme_classic()
 
-
-
-
-# AIC for parametric models (model selection)
-
-AICs <- matrix(data = NA, nrow = 4, ncol = 1)
-AICs[1, 1] <- weibull$AIC
-AICs[2, 1] <- expo$AIC
-AICs[3, 1] <- loglog$AIC
-AICs[4, 1] <- lnormal$AIC
-rownames(AICs) <- c("Weibull", "Exponential", "Log-Logistic", "Log-Normal")
-colnames(AICs) <- "AIC"
-AICs
-#Log-normal has best fit
 
 
 ##################################################################################################
