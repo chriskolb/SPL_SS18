@@ -14,8 +14,56 @@ source("library.R")
 
 load("datfinal.RDA")
 
-# Descriptives
-#############################################################################
+##################################################################################
+##################################################################################
+#################### Descriptives ################################################
+##################################################################################
+##################################################################################
+
+# 2 do:
+# graphical representation of data set (see rpubs paper)
+# descriptives table (done)
+# survival time density plot (done)
+# missing data plots before and after imputation
+# distributions and densities (by state plots, draftmans plot, countour/3d)
+
+##################################################################################
+# summary table ##################################################################
+##################################################################################
+
+#recode factors as numeric for them to be included in table
+
+sum.dat <- dat
+
+sum.dat$gender <- as.integer(as.character(sum.dat$gender))
+sum.dat$married <- as.integer(as.character(sum.dat$married))
+sum.dat$ever_div <- as.integer(as.character(sum.dat$ever_div))
+sum.dat$region <- as.integer(as.character(sum.dat$region))
+sum.dat$rural <- as.integer(as.character(sum.dat$rural))
+sum.dat$migback <- as.integer(as.character(sum.dat$migback))
+
+sum.dat <- select(sum.dat,
+                  one_of(c("time", "event", "hhinc", "maxedu", "birthyear",
+                           "gender", "region", "rural", "married", "ever_div",
+                           "migback")) )
+
+stargazer(sum.dat, type="latex",
+          summary.stat=c("mean", "sd", "min",
+                         "median", "max", "n"),
+          title = "Summary Statistics",
+          covariate.labels = c("Time to Event", "Event", "HH Income",
+                               "Educ. (years)", "Birthyear", "Gender",
+                               "East Germany", "Rural", "Married", 
+                               "Ever Divorced", "Migr. Background"),
+          digits=2,
+          summary.logical = TRUE)
+# need to add column w/ variable names (hhinc, maxedu etc.) manually in latex doc
+
+rm(sum.dat)
+
+##################################################################################
+##################################################################################
+
 # distribution of time to failure by state
 
 dist <- subset(dat, event==1)
@@ -176,10 +224,12 @@ gg_miss_fct(x = dat, fct = firstyear)
 
 #View(dat)
 
-
+##################################################################################
 ##################################################################################
 #################### ANALYSIS ####################################################
 ##################################################################################
+##################################################################################
+
 
 # Things to do:
 # Classic nonparametric estimators:
