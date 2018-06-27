@@ -21,7 +21,7 @@ load("datfinal.RDA")
 ##################################################################################
 
 # 2 do:
-# graphical representation of data set (see rpubs paper)
+# graphical representation of data set (see rpubs paper) (done)
 # descriptives table (done)
 # survival time density plot (done)
 # missing data plots before and after imputation
@@ -61,8 +61,66 @@ stargazer(sum.dat, type="latex",
 
 rm(sum.dat)
 
+
+##################################################################################
+# data structure visualization ###################################################
+##################################################################################
+
+
+# permutate persID to get rid of time dependencies in $time
+dat.str <- dat
+dat.str$pnr <- sample(1:nrow(dat), nrow(dat), replace=F)
+
+  ggplot(dat.str, aes(x = pnr, y = time)) +
+    geom_linerange(aes(ymin = 0, ymax = time), size=0.3) +
+    geom_point(aes(shape = as.factor(event), color = as.factor(event)), stroke = 0.5, cex = 1) +
+    scale_shape_manual(values = c(3,4)) + guides(shape = F, color = F) +
+    labs(y = "Time (years)", x = "Subject ID") + coord_flip() + theme_classic()
+
+# plot too crowded, look only at subsample of 500
+  
+dat.str1 <- subset(dat.str, pnr<500)
+
+ggplot(dat.str1, aes(x = pnr, y = time)) +
+  geom_linerange(aes(ymin = 0, ymax = time), size=0.65) +
+  geom_point(aes(shape = as.factor(event), color = as.factor(event)), stroke = 1, cex = 2) +
+  scale_color_manual(values = c("steelblue1", "red2"))+
+  scale_shape_manual(values = c(4,2)) + guides(shape = F, color = F) +
+  labs(y = "Time (years)", x = "Subject ID") + coord_flip() + theme_classic()
+
+
+##################################################################################
+# density plot of survival time ##################################################
+##################################################################################
+
+dens.dat <- subset(dat, event==1)
+
+ggplot(dens.dat, aes(x=time)) + 
+  geom_histogram(binwidth = 0.2, aes(fill = ..count..) ) + theme_classic() +
+  labs(y = "Count", x = "Time (years)")
+
+hist(dens.dat$time, breaks = 15, freq = F, xlab = 'Time', ylim = c(0, 0.2), ylab = 'Relative Frequency', main = 'Histogram of Survival Times')
+lines(density(dens.dat$time, na.rm = T, from = 0, to = 30))
+
+hist(dens.dat$time, # histogram
+     col="Dodger Blue", # column color
+     border="black",
+     prob = TRUE, # show densities instead of frequencies
+     xlab = "Time",
+     ylab = "Relative Frequency",
+     xlim = c(0, 30), 
+     ylim = c(0, 0.28),
+     breaks=30,
+     main = "Survival Time Density")
+lines(density(dens.dat$time, from = 0, to = 30), # density plot
+      lwd = 2, # thickness of line
+      col = "red")
+
+
 ##################################################################################
 ##################################################################################
+
+
 
 # distribution of time to failure by state
 
@@ -161,30 +219,6 @@ rm(dist)
 ggplot(dat, aes(x=maxedu, y=hhinc) ) +
   stat_density_2d(aes(fill = ..level..), geom = "polygon", colour="white",
                   n=100, h=NULL)
-
-
-# density plots of survival time
-dens.dat <- subset(dat, event==1)
-
-ggplot(dens.dat, aes(x=time)) + 
-  geom_histogram(binwidth = 0.2, aes(fill = ..count..) )
-
-hist(dens.dat$time, breaks = 15, freq = F, xlab = 'Time', ylim = c(0, 0.2), ylab = 'Relative Frequency', main = 'Histogram of Survival Times')
-lines(density(dens.dat$time, na.rm = T, from = 0, to = 30))
-
-hist(dens.dat$time, # histogram
-     col="Dodger Blue", # column color
-     border="black",
-     prob = TRUE, # show densities instead of frequencies
-     xlab = "Time",
-     ylab = "Relative Frequency",
-     xlim = c(0, 30), 
-     ylim = c(0, 0.28),
-     breaks=30,
-     main = "Survival Time Density")
-lines(density(dens.dat$time, from = 0, to = 30), # density plot
-      lwd = 2, # thickness of line
-      col = "red")
 
 
 
