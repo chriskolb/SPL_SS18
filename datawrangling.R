@@ -1,4 +1,4 @@
-#Set-up
+####### Set Up #######
 rm(list=ls())
 
 #setwd(path) in path.R
@@ -9,21 +9,19 @@ source(".path.R")
 source("library.R")
 
 
-#############################################################################################
+
 ####################  Data cleaning #########################################################
-#############################################################################################
 
 
+#### pequiv ####
 #information on individual (household head) characteristics from pequiv.csv
 
 pequiv <- import(paste(path, "pequiv.csv" , sep = "/"), setclass = "data.table")
-
 
 #restrict dataset to individuals aged 24 to 65
 pequivnew <- subset(pequiv, d11101>23 & d11101<66)
 
 #restrict dataset to household heads due to availability of hgowner only on household level
-
 pequivnew <- subset(pequivnew, d11105 == 1)
 pequivnew = as.data.table(pequivnew)
 
@@ -39,10 +37,7 @@ save(pequivsmall, file="pequivsmall.RDA")
 
 rm(pequiv, pequivnew, pequivvariables, pequivsmall)
 
-############################################################################################
-#rm(list=ls())
-
-
+#### hgen #####
 #information on household renting/ownership status from hgen.csv
 
 hgen <- import(paste(path, "hgen.csv" , sep = "/"),setclass = "data.table")
@@ -59,6 +54,22 @@ save(hgensmall, file="hgensmall.RDA")
 
 rm(hgen, hgenvariables, hgensmall )
 
+#### pgen ######
+#information on individual education from pgen (ISCED Classification)
+
+pgen <- import(paste(path, "pgen.csv" , sep = "/"),setclass = "data.table")
+
+
+pgenvariables <- c("pid" , "syear", "pgisced97")
+
+pgensmall <- select(pgen, one_of(pgenvariables))
+pgensmall = as.data.table(pgensmall)
+
+
+save(pgensmall, file="pgensmall.RDA")
+#View(hgensmall)
+
+rm(pgen, pgenvariables, pgensmall )
 
 ###########################################################################################
 #Additional variables from files with minor importance
@@ -97,13 +108,12 @@ rm(hgen, hgenvariables, hgensmall )
 
 #rm(biol, biolvariables, biolsmall)
 
-###############################################################################
+#### ppfadl #######
 #information on migration background from pffad.csv
-
 
 ppfadl <- import(paste(path, "ppfadl.csv" , sep = "/"),setclass = "data.table")
 
-#ppfadl: migback
+# migration baclground: migback
 ppfadlvariables <- c("pid", "syear", "migback")
 
 ppfadlsmall <- select(ppfadl, one_of(ppfadlvariables))
@@ -115,7 +125,7 @@ save(ppfadlsmall, file="ppfadlsmall.RDA")
 rm(ppfadl, ppfadlvariables, ppfadlsmall)
 
 
-###############################################################################
+##### hbrutto #######
 #information on spatial category - Urban / Rural
 
 
@@ -132,36 +142,32 @@ save(hbruttosmall, file="hbruttosmall.RDA")
 
 rm(hbrutto, hbruttovariables, hbruttosmall)
 
-#rm(list=ls())
-
 ##########################################################################################
-# Merge Files ############################################################################
+###### Merge Files ############################################################################
 ##########################################################################################
 
 load(file="pequivsmall.RDA")
 load(file="hgensmall.RDA")
 load(file="ppfadlsmall.RDA")
-load(file = "hbruttosmall.RDA")
-#load(file="plsmall.RDA")
-#load(file="biolsmall.RDA")
-#load(file="bioparensmall.RDA")
+load(file ="hbruttosmall.RDA")
+load(file="pgensmall.RDA")
 
 
 data = left_join(pequivsmall, hgensmall, by = c("hid", "syear"))
 data = left_join(data, hbruttosmall, by = c("hid", "syear"))
 data = left_join(data, ppfadlsmall, by = c("pid", "syear"))
-#data = left_join(data, plsmall, by = c("pid", "syear"))
+data = left_join(data, pgensmall, by = c("pid", "syear"))
 #data = left_join(data, biolsmall, by = c("pid", "syear"))
 
 #names(data)
 
-rm(hgensmall, pequivsmall, ppfadlsmall, hbruttosmall)
+rm(hgensmall, pequivsmall, ppfadlsmall, hbruttosmall, pgensmall)
 
 
 data = as.data.table(data)
 
 ##########################################################################################
-# Data cleaning on merged data set #######################################################
+##### Data cleaning on merged data set #######################################################
 ##########################################################################################
 
 # mark dissolved households (more than one PID per HID)
@@ -235,7 +241,6 @@ load(file = "data.RDA")
 # hgowner lagged variable 
 setDT(data)[, laghgowner:= shift(hgowner), hid]
 summary(data$laghgowner)
-# NA for 3.2k out of 30
 
 # indicator for renting in current period
 data$rent <- 0
@@ -321,8 +326,6 @@ data$failure2flag[data$failure2flag == -2] <- 1
 data$failure2flag[data$failure2flag == -1] <- 0
 rm(failure2.dat)
 
-#View(data[,c("hid", "syear", "change", "hgowner", "owner", "rent", "failure", "failureflag", "failure2flag")])
-
 # create birthyear variable
 data$birthyear <- data$syear -data$d11101
 summary(data$birthyear)
@@ -384,6 +387,7 @@ data <- data %>%
   mutate(divorced = ifelse(d11104==4,1,0)) %>% 
   group_by(hid) %>% 
   mutate(ever_div = max(divorced)) %>% 
+  ungroup() %>% 
   select(-divorced)
 
 # transform hh income to real hh income (in 2010 prices)
@@ -392,25 +396,17 @@ data <- mutate(data, i11101 = i11101/(y11101/100))
 # transform hh income to hh income in 1000s
 data <- mutate(data, i11101 = i11101/1000)
 
-
-
-#View(data[, c("hid", "syear", "hgowner" , "rent", "owner", "change", "failure", "firstyear" , "lastyear", "failureflag", "failure2flag",  "time", "firstfailyear") ])
 names(data)
 
-#View(data)
-
-
 ###########################################################################################
-# Long Imputation #########################################################################
+######## Long Imputation #########################################################################
 ###########################################################################################
-
 
 # First Imputation: 
 # Impute missing values (at first year) from other years if available
 
-#################################
-# Impute pre government HH income 
-#################################
+
+#### Impute pre government HH income #####
 
 # If income value is NA take value of next year otherwise of the year after 
 
@@ -425,14 +421,25 @@ data <- mutate(data, hhincimp = ifelse(is.na(data$i11101),
                                               ifelse(is.na(data$shift2income), NA , data$shift2income), data$shiftincome ), data$i11101))
 lapply(list(data$i11101, data$hhincimp, data$shiftincome, data$shift2income), summary) 
 
-#View(data[,c("hid", "pid", "syear", "i11101", "shiftincome", "shift2income", "hhincimp")])
 
+###### Impute education #########
 
-##################
-# Impute education
-##################
+### compare missing values and data quality between d11109 and pgisced97
+### isced97 variable comprises of half of d11109 missing values 
+
+# split isced97 in 4 homogenous groups
+# 0 = elementary education, 1 = medium education, 2 = higher vocational, 3 = high education
+
+data <- data %>% 
+  mutate(educ = ifelse(pgisced97>=0 & pgisced97 <3,0, 
+                       ifelse(pgisced97==3,1,
+                              ifelse(pgisced97>3 & pgisced97<6,2,
+                                                    ifelse(pgisced97==6,3,NA))))) 
+
+table(data$educ)
 
 # maximum years of education is superior measure and has fewer missings
+
 maxedu.dat <- aggregate(d11109 ~ hid, data, function(x) max(x))
 names(maxedu.dat)[names(maxedu.dat) == "d11109"] <- "maxedu"
 data = left_join(data, maxedu.dat, by = "hid")
@@ -445,19 +452,19 @@ data$maxedu[data$maxedu == -1] <- NA
 data$d11109[data$d11109 == -2] <- 0
 data$d11109[data$d11109 == -1] <- NA
 
-lapply(list(data$d11109, data$maxedu), summary) 
+lapply(list(data$d11109, data$maxedu, data$educ), summary) 
 
 
 ##########################################################################################
 save(data, file="datalong.RDA")
 
 ##########################################################################################
-# Wide Format Data Set ###################################################################
+######## Wide Format Data Set ###################################################################
 ##########################################################################################
 
 load("datalong.RDA")
 
-# wide format ####################################################################
+####### wide format ####################################################################
 
 # create time-invariant covariates
 # if covariate is constant over time, no issue
@@ -468,7 +475,7 @@ dataw <- subset(data, syear == firstyear)
 dataw <- as.data.frame(dataw)
 
 
-datawvars <- c("hid", "pid", "failureflag", "d11102ll", "d11104", "ever_div", "d11109" , "e11106",
+datawvars <- c("hid", "pid", "failureflag", "d11102ll", "d11104", "educ", "ever_div", "d11109" , "e11106",
                 "i11101" ,"l11101", "l11102", "minage", "firstyear",
                 "lastyear", "birthyear", "firstfailyear", "migback", "maxedu", "hhincimp", "regtyp")
 
@@ -477,7 +484,7 @@ dataw <- select(dataw, one_of(datawvars))
 rm(datawvars)
 
 # rename covariates
-names(dataw) <- c( "hid", "pid", "event", "gender", "married", "ever_div", "yearsedu", "sector",
+names(dataw) <- c( "hid", "pid", "event", "gender", "married", "educ", "ever_div", "yearsedu", "sector",
                     "hhinc2", "state", "region", "minage", "firstyear",
                     "lastyear", "birthyear", "firstfailyear", "migback", "maxedu", "hhinc", "rural")
 
@@ -595,7 +602,7 @@ dat$firstfailyear[dat$firstfailyear == -1 ] <- NA
 gg_miss_fct(x = dat, fct = firstyear)
 
 
-##########################################################################################
+################ Final Save ##########################################################################
 save(dat, file="datfinal.RDA")
 
 
