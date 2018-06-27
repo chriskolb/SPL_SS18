@@ -1,4 +1,4 @@
-######## Set-up #######
+#Set-up
 rm(list=ls())
 
 #setwd(path) in path.R
@@ -8,50 +8,59 @@ source(".path.R")
 #source("packages.R")
 source("library.R")
 
-####################  Data cleaning #########################################################
 
-### Pequiv ####
+#############################################################################################
+####################  Data cleaning #########################################################
+#############################################################################################
+
+
 #information on individual (household head) characteristics from pequiv.csv
 
 pequiv <- import(paste(path, "pequiv.csv" , sep = "/"), setclass = "data.table")
 
+
 #restrict dataset to individuals aged 24 to 65
-pequivnew <- pequiv %>% 
-   subset(d11101>23 & d11101<66) 
-  
+pequivnew <- subset(pequiv, d11101>23 & d11101<66)
+
 #restrict dataset to household heads due to availability of hgowner only on household level
 
-pequivnew <- pequivnew %>% 
-  subset(d11105 == 1)
-pequivnew <- as.data.table(pequivnew)
-  
-pequivvariables <- c("pid" , "hid" , "syear" , "d11102ll" , "d11101" , "d11104" , "d11108" , "d11109" ,  "e11106" , "i11101" , "i11103" , "w11102" , "w11103" , "y11101" , "l11101" , "l11102" , "iself" , "ijob1" , "ijob2")
+pequivnew <- subset(pequivnew, d11105 == 1)
+pequivnew = as.data.table(pequivnew)
 
-pequivsmall <- pequivnew %>% 
-  select(one_of(pequivvariables))
+
+pequivvariables <- c("pid" , "hid" , "syear" , "d11102ll" , "d11101" ,
+                     "d11104" , "d11108" , "d11109" ,  "e11106" , "i11101" ,
+                     "i11103" , "w11102" , "w11103" , "y11101" , "l11101" ,
+                     "l11102" , "iself" , "ijob1" , "ijob2")
+
+pequivsmall <- select(pequivnew, one_of(pequivvariables))
 
 save(pequivsmall, file="pequivsmall.RDA")
 
 rm(pequiv, pequivnew, pequivvariables, pequivsmall)
 
-##### hgen #####
+############################################################################################
+#rm(list=ls())
+
 
 #information on household renting/ownership status from hgen.csv
 
 hgen <- import(paste(path, "hgen.csv" , sep = "/"),setclass = "data.table")
 
+
 hgenvariables <- c("hid" , "syear", "hgacquis" , "hgowner" , "hgmoveyr", "hgrent")
 
-hgensmall <- hgen %>% 
-  select(one_of(hgenvariables))
+hgensmall <- select(hgen, one_of(hgenvariables))
+hgensmall = as.data.table(hgensmall)
 
-hgensmall <- as.data.table(hgensmall)
 
 save(hgensmall, file="hgensmall.RDA")
+#View(hgensmall)
 
 rm(hgen, hgenvariables, hgensmall )
 
-##### interim variable import #####
+
+###########################################################################################
 #Additional variables from files with minor importance
 #rm(list=ls())
 
@@ -71,7 +80,7 @@ rm(hgen, hgenvariables, hgensmall )
 #View(plsmall)
 
 
-
+###############################################################################
 #information on parents education
 
 
@@ -88,43 +97,46 @@ rm(hgen, hgenvariables, hgensmall )
 
 #rm(biol, biolvariables, biolsmall)
 
-###### ppfad #####
-#information on migration background from pffadl.csv
+###############################################################################
+#information on migration background from pffad.csv
+
 
 ppfadl <- import(paste(path, "ppfadl.csv" , sep = "/"),setclass = "data.table")
 
 #ppfadl: migback
 ppfadlvariables <- c("pid", "syear", "migback")
 
-ppfadlsmall <- ppfadl %>% 
-  select(one_of(ppfadlvariables))
-
-ppfadlsmall <- as.data.table(ppfadlsmall)
+ppfadlsmall <- select(ppfadl, one_of(ppfadlvariables))
+ppfadlsmall = as.data.table(ppfadlsmall)
 
 save(ppfadlsmall, file="ppfadlsmall.RDA")
+
 
 rm(ppfadl, ppfadlvariables, ppfadlsmall)
 
 
-##### hbrutto #####
-
+###############################################################################
 #information on spatial category - Urban / Rural
+
 
 hbrutto <- import(paste(path, "hbrutto.csv" , sep = "/"),setclass = "data.table")
 
 #hbrutto: regtyp
 hbruttovariables <- c("hid", "syear", "regtyp")
 
-hbruttosmall <- hbrutto %>% 
-  select(one_of(hbruttovariables))
-hbruttosmall <- as.data.table(hbruttosmall)
+hbruttosmall <- select(hbrutto, one_of(hbruttovariables))
+hbruttosmall = as.data.table(hbruttosmall)
 
 save(hbruttosmall, file="hbruttosmall.RDA")
 
+
 rm(hbrutto, hbruttovariables, hbruttosmall)
 
+#rm(list=ls())
 
-######### Merge Files ##################################################################
+##########################################################################################
+# Merge Files ############################################################################
+##########################################################################################
 
 load(file="pequivsmall.RDA")
 load(file="hgensmall.RDA")
@@ -134,21 +146,26 @@ load(file = "hbruttosmall.RDA")
 #load(file="biolsmall.RDA")
 #load(file="bioparensmall.RDA")
 
-data <- left_join(pequivsmall, hgensmall, by = c("hid", "syear"))
-data <- data %>%
-  left_join(hbruttosmall,by = c("hid", "syear")) %>% 
-  left_join(ppfadlsmall, by = c("pid", "syear")) # %>% 
-  #left_join(plsmall, by = c("pid", "syear")) %>% 
-  #left_join(biolsmall, by = c("pid", "syear"))
+
+data = left_join(pequivsmall, hgensmall, by = c("hid", "syear"))
+data = left_join(data, hbruttosmall, by = c("hid", "syear"))
+data = left_join(data, ppfadlsmall, by = c("pid", "syear"))
+#data = left_join(data, plsmall, by = c("pid", "syear"))
+#data = left_join(data, biolsmall, by = c("pid", "syear"))
+
+#names(data)
 
 rm(hgensmall, pequivsmall, ppfadlsmall, hbruttosmall)
 
-data <- as.data.table(data)
 
+data = as.data.table(data)
 
-######## Data cleaning on merged data set #####################
+##########################################################################################
+# Data cleaning on merged data set #######################################################
+##########################################################################################
 
 # mark dissolved households (more than one PID per HID)
+
 # compute max(pid)-min(pid) for each household
 # if difference = 0 => household remains undissolved throughout observation period
 dissolvedata <- aggregate(data$pid ~ data$hid, data , function(x) (max(x)-min(x)))
@@ -156,12 +173,17 @@ names(dissolvedata)[names(dissolvedata) == "data$pid"] <- "dissolved"
 names(dissolvedata)[names(dissolvedata) == "data$hid"] <- "hid"
 summary(dissolvedata$dissolved)
 
-data <- data %>%
-  left_join(dissolvedata, by = c("hid")) %>% 
-  # remove dissolved households from analysis %>% 
-  subset(dissolved == 0)
+data = left_join(data, dissolvedata, by = c("hid"))
+
+#table(data$dissolved)
+#View(data[,c("hid", "pid", "syear", "dissolved")])
+
+# remove dissolved households from analysis
+# obs go from 260k to 230k, which corresponds to what we expect
+data <- subset(data, dissolved == 0)
 
 rm(dissolvedata)
+
 
 # mark households who acquired home ownership through inheritance/endowment
 
@@ -170,8 +192,8 @@ data$inherit[data$hgacquis == 2] <- 1
 table(data$inherit)
 
 # remove observations where inherit=1
-data <- data %>% 
-  subset(inherit == 0)
+# reduces data from 230k to 216k
+data <- subset(data, inherit == 0)
 
 # age at first observation (minage)
 
@@ -182,22 +204,29 @@ names(minage.dat)[names(minage.dat) == "data$d11101"] <- "minage"
 names(minage.dat)[names(minage.dat) == "data$hid"] <- "hid"
 
 # merge minage variable to dataset
-data <- data %>% 
-  left_join(minage.dat, by = "hid") 
-
+data = left_join(data, minage.dat, by = "hid")
+summary(data$minage)
 rm(minage.dat)
+
+#lapply(list(x, y, z), summary) <- summarize from stata
+
 head(data[,c("hid", "syear", "d11101", "minage")])
 
-# keep only individuals that were surveyed starting before or at age 25
+# minage==25 reduces data from ~215k to <30k !
 
-data <- data %>% 
-  subset(minage <= 25)
+# keep only individuals that were surveyed starting before or at age 30
+# reduces dataset from ~210k to 64k
+# reducing to minage<=25 reduces dataset to 29k observations
+
+data <- subset(data, minage <= 25)
 
 
 save(data, file="data.RDA")
+#rm(list=ls())
 
-
-###### Create indicators and time variables ###################################################
+##########################################################################################
+# create indicators and time variables ###################################################
+##########################################################################################
 
 load(file = "data.RDA")
 
@@ -355,7 +384,6 @@ data <- data %>%
   mutate(divorced = ifelse(d11104==4,1,0)) %>% 
   group_by(hid) %>% 
   mutate(ever_div = max(divorced)) %>% 
-  ungroup() %>% 
   select(-divorced)
 
 # transform hh income to real hh income (in 2010 prices)
@@ -419,17 +447,6 @@ data$d11109[data$d11109 == -1] <- NA
 
 lapply(list(data$d11109, data$maxedu), summary) 
 
-#ever divorced
-
-data <- data %>% 
-  mutate(divorced = ifelse(d11104==4,1,0)) %>% 
-  group_by(hid) %>%
-  mutate(ever_div = max(divorced)) %>%
-  ungroup() %>% 
-  select(-divorced)
-
-#########################################################################################
-#########################################################################################
 
 ##########################################################################################
 save(data, file="datalong.RDA")
