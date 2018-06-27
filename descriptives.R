@@ -18,7 +18,6 @@ load("datfinal.RDA")
 #############################################################################
 #############################################################################
 #need to check analysis part of script for consistency (esp variable names)
-#add: regional indicators and divorced dummy
 
 #distribution of time to failure by state
 
@@ -260,7 +259,6 @@ coxtest
 #Schoenfeld graphical test of cox ph assumption
 ggcoxzph(coxtest)
 
-
 #adjusted (for covariates) survival curves from cox model
 
 #by highinc
@@ -286,6 +284,7 @@ rm(cox.ph, cox.ph2, coxtest, coxsurv)
 #All of the following are simple KM curves using the long format for survival objects
 #   => long format should not be used anymore, wide is now available (above) from $$datfin
 
+load("datalong.RDA")
 
 #create minimal dataset to try out survival functions
 minimal <- data[, c("hid", "syear", "tstart", "tstop", "time", "failure",

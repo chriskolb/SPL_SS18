@@ -65,7 +65,6 @@ rm(hgen, hgenvariables, hgensmall )
 #ppfadl: germborn migback
 #pl: plh0204 (willingness to take risks),plb0022 working status
 
-
 ###########################################################################################
 #Additional variables from files with minor importance
 #rm(list=ls())
@@ -446,9 +445,11 @@ lapply(list(data$d11109, data$maxedu), summary)
 
 data <- data %>% 
   mutate(divorced = ifelse(d11104==4,1,0)) %>% 
-  group_by(hid) %>% 
-  mutate(ever_div = max(divorced)) %>% 
+  group_by(hid) %>%
+  mutate(ever_div = max(divorced)) %>%
+  ungroup() %>% 
   select(-divorced)
+
 #########################################################################################
 #########################################################################################
 
