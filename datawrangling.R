@@ -572,6 +572,7 @@ dataw$sector <- as.factor(dataw$sector)
 dataw$mig2 <- as.factor(dataw$mig2)
 dataw$rural <- as.factor(dataw$rural)
 dataw$migback <- as.factor(dataw$migback)
+dataw$educ <- as.factor(dataw$educ)
 
 
 ###########################################################################################
