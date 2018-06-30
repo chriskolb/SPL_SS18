@@ -265,9 +265,8 @@ gg_miss_fct(x = dat, fct = firstyear)
 
 # Things to do:
 # Classic nonparametric estimators:
-# KM, Nelson-Aalen/Fleming-Harrington comparison for overall group
-# CDF, Survival function, cumulative hazard function for both estimators
-# KM by strata (most interesting ones migback, highinc etc.)
+# CDF, Survival function, cumulative hazard function for KM and Nelson/Aalen/Fleming-Harrington (done)
+# KM by strata (most interesting ones migback, highinc etc.) (done)
 # Cox PH regression:
 # results table, plot overall, ggadjust plots, schoenfeld test plot, hazard ratios, other
 # Comparison Parametric Models and Cox PH / KM:
@@ -278,13 +277,62 @@ gg_miss_fct(x = dat, fct = firstyear)
 # prediction error curve, partial dependence surface, VIMP (variable importance)
 # ggRandomForests
 
-# KM by region ####################################################################
+
+##################################################################################################
+# Comparison Kaplan-Meier & Nelson-Aalen/Fleming-Harrington ######################################
+##################################################################################################
+
+# Kaplan-Meier estimator
+km.fit <- survfit(Surv(time,event, type="right") ~ 1, data=dat, type="kaplan-meier")
+
+fh.fit <- survfit(Surv(time,event, type="right") ~ 1, data=dat, type="fleming-harrington")
+
+kmfh.all <- list(km.fit, fh.fit)
+
+surv.all <- ggsurvplot_combine(kmfh.all, data=dat, conf.int=T,
+                     legend.labs=c("KM", "Fleming-Harrington"), legend.title="Model",  
+                     risk.table=F,
+                     cumcensor=FALSE,
+                     censor=FALSE,
+                     linetype=c(1,1),
+                     size = 0.3)
+
+cumprop.all <- ggsurvplot_combine(kmfh.all, data=dat, conf.int=T,
+                               fun = "event",
+                               legend.labs=c("KM", "Fleming-Harrington"), legend.title="Model",  
+                               risk.table=F,
+                               cumcensor=FALSE,
+                               censor=FALSE,
+                               linetype=c(1,1),
+                               size = 0.3)
+
+cumhaz.all <- ggsurvplot_combine(kmfh.all, data=dat, conf.int=T,
+                               fun = "cumhaz",
+                               legend.labs=c("KM.", "Fleming-Harrington"), legend.title="Model",  
+                               risk.table=F,
+                               cumcensor=FALSE,
+                               censor=FALSE,
+                               linetype=c(1,1),
+                               xlim=c(0,30),
+                               size = 0.3)
+
+# put all plots in one graph
+
+kmfh.glist <- list(surv.all, cumprop.all, cumhaz.all)
+
+arrange_ggsurvplots(kmfh.glist, print = TRUE, ncol = 3, nrow = 1)
+
+##################################################################################################
+# KM by strata ###################################################################################
+##################################################################################################
+
+
+# KM by region ###################################################################################
 
 wide.fit <- survfit(Surv(time, event, type="right") ~ region, data=dat)
 
-kmcurve <- ggsurvplot(wide.fit, conf.int=T,
+km.reg <- ggsurvplot(wide.fit, conf.int=T,
                       legend.labs=c("West", "East"), legend.title="Region",  
-                      title="Kaplan-Meier Curve for Survival in Rent", 
                       censor=F,
                       palette = "strata",
                       risk.table = T,
@@ -295,17 +343,16 @@ kmcurve <- ggsurvplot(wide.fit, conf.int=T,
                       surv.median.line="hv",
                       linetype=c(1,1),
                       size = 0.5)
-print(kmcurve)
+print(km.reg)
 
-rm(kmcurve, wide.fit)
+rm(wide.fit)
 
 
 # KM by migback ####################################################################
 
 wide.fit <- survfit(Surv(time, event, type="right") ~ migback, data=dat)
-kmcurve <- ggsurvplot(wide.fit, conf.int=T,
+km.mig <- ggsurvplot(wide.fit, conf.int=T,
                       legend.labs=c("No", "Yes"), legend.title="Migr. Back.",  
-                      title="Kaplan-Meier Curve for Survival in Rent", 
                       censor=F,
                       palette = "strata",
                       risk.table = T,
@@ -316,7 +363,7 @@ kmcurve <- ggsurvplot(wide.fit, conf.int=T,
                       surv.median.line="hv",
                       linetype=c(1,1),
                       size = 0.5)
-print(kmcurve)
+print(km.mig)
 
 rm(kmcurve, wide.fit)
 
@@ -324,13 +371,12 @@ rm(kmcurve, wide.fit)
 # KM by highinc/lowinc ###########################################################
 
 medinc <- median(as.numeric(dat$hhinc), na.rm=TRUE)
-dat <- mutate(dat, highinc = ifelse(dat$hhinc > medinc, 1, 0))
-summary(dat$highinc)
+dat.inc <- mutate(dat, highinc = ifelse(dat$hhinc > medinc, 1, 0))
+summary(dat.inc$highinc)
 #define survival object and fit KM estimator
-inc.fit <- survfit(Surv(time, event, type="right") ~ highinc, data=dat)
+inc.fit <- survfit(Surv(time, event, type="right") ~ highinc, data=dat.inc)
 km.inc <- ggsurvplot(inc.fit, conf.int=T,
                      legend.labs=c("Low", "High"), legend.title="HH Inc.",  
-                     title="Kaplan-Meier Curve for Survival in Rent", 
                      censor=F,
                      palette = "strata",
                      risk.table = T,
@@ -343,18 +389,15 @@ km.inc <- ggsurvplot(inc.fit, conf.int=T,
                      size = 0.5)
 print(km.inc)
 
-rm(km.inc, inc.fit, medinc)
+rm(inc.fit, medinc, dat.inc)
 
-# KM by higedu/lowedu ###########################################################
 
-mededu <- median(dat$maxedu, na.rm=TRUE)
-dat <- mutate(dat, highedu = ifelse(dat$maxedu > mededu, 1, 0))
-summary(dat$highedu)
+# KM by educ (ISCED 97) ###########################################################
+
 #define survival object and fit KM estimator
-edu.fit <- survfit(Surv(time, event, type="right") ~ highedu, data=dat)
-km.edu <- ggsurvplot(edu.fit, conf.int=T,
-                     legend.labs=c("Low", "High"), legend.title="Years Educ.",  
-                     title="Kaplan-Meier Curve for Survival in Rent", 
+edu.fit <- survfit(Surv(time, event, type="right") ~ educ, data=dat)
+km.edu <- ggsurvplot(edu.fit, conf.int=F,
+                     legend.labs=c("Elementary", "Medium", "Higher voc.", "High"), legend.title="Education",  
                      censor=F,
                      palette = "strata",
                      risk.table = T,
@@ -363,11 +406,11 @@ km.edu <- ggsurvplot(edu.fit, conf.int=T,
                      ylim=c(0,1),
                      xlim=c(0,30),
                      surv.median.line="hv",
-                     linetype=c(1,1),
-                     size = 0.5)
+                     linetype=c(1,1,1,1),
+                     size = 0.4)
 print(km.edu)
 
-rm(km.edu, edu.fit, mededu)
+rm(edu.fit)
 
 # KM by cohorts 84-87 and 94-97 #########################################################
 
@@ -377,9 +420,7 @@ table(dat$cohort8494)
 #define survival object and fit KM estimator
 coh.fit <- survfit(Surv(time, event, type="right") ~ cohort8494, data=dat)
 km.coh <- ggsurvplot(coh.fit, conf.int=T,
-                     legend.labs=c("84-87", "94-97"), legend.title="Strata",  
-                     title="Kaplan-Meier Curve for Survival in Rent", 
-                     censor=F,
+                     legend.labs=c("84-87", "94-97"), legend.title="Cohorts",                       censor=F,
                      palette = "strata",
                      risk.table = T,
                      pval=TRUE,
@@ -391,40 +432,36 @@ km.coh <- ggsurvplot(coh.fit, conf.int=T,
                      size = 0.5)
 print(km.coh)
 
-rm(km.coh, coh.fit)
+rm(coh.fit)
 
 
+# arrange plots ############################################################
 
-#cohorts 84-87 and 04-07
+km.glist1 <- list(km.inc, km.mig)
 
-dat <- mutate(dat, cohort8404 = ifelse
-              (dat$firstyear>=1984 & dat$firstyear<=1987, 1,
-                ifelse(dat$firstyear>=2004 & dat$firstyear<=2007, 2, NA)))
-summary(dat$cohort8404)
-table(dat$cohort8404)
-#define survival object and fit KM estimator
-coh.fit2 <- survfit(Surv(time, event, type="right") ~ cohort8404, data=dat)
-km.coh2 <- ggsurvplot(coh.fit2, conf.int=T,
-                      legend.labs=c("84-87", "94-97"), legend.title="Strata",  
-                      title="Kaplan-Meier Curve for Survival in Rent", 
-                      censor=F,
-                      palette = "strata",
-                      risk.table = T,
-                      pval=TRUE,
-                      risk.table.height=.25,
-                      ylim=c(0,1),
-                      xlim=c(0,30),
-                      surv.median.line="hv",
-                      linetype=c(1,1),
-                      size = 0.5)
-print(km.coh2)
-
-rm(km.coh2, coh.fit2)
+km.plot1 <- arrange_ggsurvplots(km.glist1, ncol = 2, nrow = 1, print = FALSE,
+                    risk.table.height = 0.25,
+                    surv.plot.height = 1)
 
 
+km.glist2 <- list(km.reg, km.coh)
+
+km.plot2 <- arrange_ggsurvplots(km.glist2, ncol = 2, nrow = 1, print = FALSE,
+                    risk.table.height = 0.25,
+                    surv.plot.height = 1)
 
 
-# cox proportional hazard regression #################################################
+# print KM by strata plots ##################################################
+
+print(km.plot1)
+print(km.plot2)
+print(km.edu)
+
+
+##################################################################################################
+# Cox Proportional Hazards Regression ############################################################
+##################################################################################################
+
 
 #survival/rms to estimate models, survminer package for plots and diagnostics
 
@@ -624,154 +661,5 @@ print(rsf)
 plot(gg_rfsrc(rsf, by = "region"))
 
 plot(gg_rfsrc(rsf, by = "migback"))
-
-
-
-#################################################################################################
-# OLD Analysis in long data set #################################################################
-#################################################################################################
-
-#All of the following are simple KM curves using the long format for survival objects
-#   => long format should not be used anymore, wide is now available (above) from $$dat
-
-
-#create minimal dataset to try out survival functions
-minimal <- data[, c("hid", "syear", "tstart", "tstop", "time", "failure",
-                    "failureflag", "l11102", "firstyear")]
-
-minimal$tstart <- minimal$tstart - 2
-minimal$tstop <- minimal$tstop - 2
-#define survival object in long format version (interval censored)
-min.fit <- survfit(Surv(tstart, tstop, failure) ~ l11102,
-                   data=minimal)
-summary(min.fit)
-
-#define survival curve object
-kmcurve <- ggsurvplot(min.fit, conf.int=T,
-                      legend.labs=c("West", "East"), legend.title="Region",  
-                      title="Kaplan-Meier Curve for Survival in Rent", 
-                      censor=F,
-                      palette = "strata",
-                      risk.table = T,
-                      risk.table.height=.25,
-                      ylim=c(0.25,1),
-                      xlim=c(0,30),
-                      surv.median.line="h",
-                      linetype=c(1,1),
-                      size = 0.5)
-#control line width through geom_step(size = 2)
-#print and save survival curve
-print(kmcurve)
-ggsave(file = "kmcurve.pdf", print(kmcurve))
-
-summary(min.fit)
-
-
-
-glist <- list(
-  ggsurvplot(min.fit, risk.table = F, main = "Survival Probability"),
-  ggsurvplot(min.fit, fun = "event",  main = "Cumulative Proportion"),
-  ggsurvplot(min.fit, fun = "cumhaz", main = "Cumulative Hazard")
-)
-arrange_ggsurvplots(glist, print = TRUE, ncol = 3, nrow = 1)
-
-
-# cohort analysis#####################################################################
-
-#define cohorts in long format version
-
-#cohort comprising all 25-yo-renters observed from 1984 to 1986
-minimal$c8486 <- 0
-minimal$c8486[minimal$firstyear<=1986] <- 1
-summary(minimal$c8486)
-
-#cohort comprising all 25-yo-renters observed from 1994 to 1996
-minimal$c9496 <- 0
-minimal$c9496[minimal$firstyear<=1996 & minimal$firstyear>=1994] <- 1
-summary(minimal$c9496)
-
-#create cohort grouping variable
-minimal$cohort <- NA
-minimal$cohort[minimal$c8486 == 1] <- 1
-minimal$cohort[minimal$c9496 == 1] <- 2
-table(minimal$cohort)
-
-#define survival object and strata
-min.fit.coh <- survfit(Surv(tstart, tstop, failure) ~ cohort,
-                       data=minimal)
-summary(min.fit.coh)
-
-
-kmcurve.coh <- ggsurvplot(min.fit.coh, conf.int=T,
-                          legend.labs=c("84-86", "94-96"), legend.title="Cohort",  
-                          title="Kaplan-Meier Curve for Survival in Rent", 
-                          censor=F,
-                          palette = "strata",
-                          risk.table = T,
-                          risk.table.height=.25,
-                          ylim=c(0.2,1),
-                          xlim=c(0,30),
-                          surv.median.line="h",
-                          linetype=c(1,1),
-                          size = 0.5)
-print(kmcurve.coh)
-
-summary(min.fit.coh)
-
-# aggregated graphs
-
-#generate graphs, then aggregate them
-
-survprob <- ggsurvplot(min.fit.coh, conf.int=T,
-                       legend.labs=c("84-86", "94-96"), legend.title="Cohort",  
-                       title="Kaplan-Meier Survival Probability", 
-                       censor=F,
-                       palette = "strata",
-                       risk.table = F,
-                       risk.table.height=.25,
-                       ylim=c(0.2,1),
-                       xlim=c(0,30),
-                       surv.median.line="h",
-                       linetype=c(1,1),
-                       size = 0.5)
-#print(survprob)
-
-cumprop <- ggsurvplot(min.fit.coh, conf.int=T,
-                      legend.labs=c("84-86", "94-96"), legend.title="Cohort",  
-                      title="Kaplan-Meier Cumulative Proportion", 
-                      main="Cumulative Proportion",
-                      censor=F,
-                      fun = "event",
-                      palette = "strata",
-                      risk.table = F,
-                      risk.table.height=.25,
-                      ylim=c(0,1),
-                      xlim=c(0,30),
-                      surv.median.line="h",
-                      linetype=c(1,1),
-                      size = 0.5)
-#print(cumprop)
-
-
-cumulhaz <- ggsurvplot(min.fit.coh, conf.int=T,
-                       legend.labs=c("84-86", "94-96"), legend.title="Cohort",  
-                       title="Kaplan-Meier Cumulative Hazard", 
-                       main="Cumulative Hazard",
-                       censor=F,
-                       fun = "cumhaz",
-                       palette = "strata",
-                       risk.table = F,
-                       risk.table.height=.25,
-                       ylim=c(0,1.5),
-                       xlim=c(0,30),
-                       linetype=c(1,1),
-                       size = 0.5)
-
-
-
-glist <- list(survprob, cumprop, cumulhaz)
-arrange_ggsurvplots(glist, print = TRUE, ncol = 3, nrow = 1)
-
-
 
 
