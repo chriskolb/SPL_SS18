@@ -43,7 +43,7 @@ sum.dat$rural <- as.integer(as.character(sum.dat$rural))
 sum.dat$migback <- as.integer(as.character(sum.dat$migback))
 
 sum.dat <- select(sum.dat,
-                  one_of(c("time", "event", "hhinc", "maxedu", "birthyear",
+                  one_of(c("time", "event", "hhinc", "educ", "birthyear",
                            "gender", "region", "rural", "married", "ever_div",
                            "migback")) )
 
@@ -57,7 +57,7 @@ stargazer(sum.dat, type="latex",
                                "Ever Divorced", "Migr. Background"),
           digits=2,
           summary.logical = TRUE)
-# need to add column w/ variable names (hhinc, maxedu etc.) manually in latex doc
+# need to add column w/ variable names (hhinc, educ etc.) manually in latex doc
 
 rm(sum.dat)
 
@@ -71,14 +71,14 @@ rm(sum.dat)
 dat.str <- dat
 dat.str$pnr <- sample(1:nrow(dat), nrow(dat), replace=F)
 
-  ggplot(dat.str, aes(x = pnr, y = time)) +
-    geom_linerange(aes(ymin = 0, ymax = time), size=0.3) +
-    geom_point(aes(shape = as.factor(event), color = as.factor(event)), stroke = 0.5, cex = 1) +
-    scale_shape_manual(values = c(3,4)) + guides(shape = F, color = F) +
-    labs(y = "Time (years)", x = "Subject ID") + coord_flip() + theme_classic()
+ggplot(dat.str, aes(x = pnr, y = time)) +
+  geom_linerange(aes(ymin = 0, ymax = time), size=0.3) +
+  geom_point(aes(shape = as.factor(event), color = as.factor(event)), stroke = 0.5, cex = 1) +
+  scale_shape_manual(values = c(3,4)) + guides(shape = F, color = F) +
+  labs(y = "Time (years)", x = "Subject ID") + coord_flip() + theme_classic()
 
 # plot too crowded, look only at subsample of 500
-  
+
 dat.str1 <- subset(dat.str, pnr<500)
 
 ggplot(dat.str1, aes(x = pnr, y = time)) +
@@ -186,7 +186,7 @@ rm(dist)
 dist <- subset(dat, event==1)
 dist$yeargroup <- as.factor(dist$firstyear)
 levels(dist$state)
-hist(dist$maxedu)
+hist(dist$educ)
 
 ggplot(
   dist, 
@@ -203,7 +203,7 @@ ggplot(
   labs(title = 'Density of Years of Education', x = "Education", y = "States")
 
 
-ggplot(dist, aes(x = maxedu, y = state, fill = state)) + 
+ggplot(dist, aes(x = educ, y = state, fill = state)) + 
   geom_density_ridges(scale = 2.5) + theme_minimal() +
   scale_fill_cyclical(values = c("blue", "green")) +
   labs(title = 'Density of Years of Education', x = "education", y = "States")
@@ -214,7 +214,7 @@ rm(dist)
 
 
 # area + contour 2d density
-ggplot(dat, aes(x=maxedu, y=hhinc) ) +
+ggplot(dat, aes(x=educ, y=hhinc) ) +
   stat_density_2d(aes(fill = ..level..), geom = "polygon", colour="white",
                   n=100, h=NULL)
 
@@ -222,10 +222,10 @@ ggplot(dat, aes(x=maxedu, y=hhinc) ) +
 
 # Draftmans Plot
 
-pairplotcont <- dat[, c("hhinc", "maxedu", "time")]
+pairplotcont <- dat[, c("hhinc", "educ", "time")]
 pairplotdisc <- dat[, c("gender", "event", "married", "region")]
 
-pairplot <- dat[, c("time", "event", "hhinc", "maxedu", "migback", "rural")]
+pairplot <- dat[, c("time", "event", "hhinc", "educ", "migback", "rural")]
 
 pairs(pairplotcont, main = "Survival Data", pch = 21, bg = c("red", "blue")[unclass(dat$region)])
 
@@ -347,8 +347,8 @@ rm(km.inc, inc.fit, medinc)
 
 # KM by higedu/lowedu ###########################################################
 
-mededu <- median(dat$maxedu, na.rm=TRUE)
-dat <- mutate(dat, highedu = ifelse(dat$maxedu > mededu, 1, 0))
+mededu <- median(dat$educ, na.rm=TRUE)
+dat <- mutate(dat, highedu = ifelse(dat$educ > mededu, 1, 0))
 summary(dat$highedu)
 #define survival object and fit KM estimator
 edu.fit <- survfit(Surv(time, event, type="right") ~ highedu, data=dat)
@@ -398,8 +398,8 @@ rm(km.coh, coh.fit)
 #cohorts 84-87 and 04-07
 
 dat <- mutate(dat, cohort8404 = ifelse
-                (dat$firstyear>=1984 & dat$firstyear<=1987, 1,
-                  ifelse(dat$firstyear>=2004 & dat$firstyear<=2007, 2, NA)))
+              (dat$firstyear>=1984 & dat$firstyear<=1987, 1,
+                ifelse(dat$firstyear>=2004 & dat$firstyear<=2007, 2, NA)))
 summary(dat$cohort8404)
 table(dat$cohort8404)
 #define survival object and fit KM estimator
@@ -435,13 +435,13 @@ plot(coxsurv)
 #Cox PH model
 
 #using survival package
-cox.ph <- coxph(coxsurv ~ hhinc + rural + maxedu + region + migback + married , data=dat)
+cox.ph <- coxph(coxsurv ~ hhinc + rural + educ + region + migback + married , data=dat)
 
-cox.ph <- coxph(coxsurv ~ hhinc + rural + maxedu + region + migback , data=dat)
+cox.ph <- coxph(coxsurv ~ hhinc + rural + educ + region + migback , data=dat)
 print(cox.ph)
 
 #using rms package
-cox.ph2 <- cph(ccoxsurv ~ hhinc + rural + maxedu + region + migback + married , data=dat,
+cox.ph2 <- cph(ccoxsurv ~ hhinc + rural + educ + region + migback + married , data=dat,
                na.rm=FALSE, y=TRUE, x=TRUE)
 
 print(cox.ph)
@@ -484,7 +484,7 @@ rm(cox.ph, cox.ph2, coxtest, coxsurv)
 coxparm <- Surv(dat$time, dat$event, type="right")
 
 # define model formula
-parmform <- as.formula("coxparm ~ hhinc + rural + maxedu + region + migback + married + ever_div")
+parmform <- as.formula("coxparm ~ hhinc + rural + educ + region + migback + married + ever_div")
 
 # Kaplan-Meier estimator
 kapm <- survfit(coxparm ~ 1, data=dat)
@@ -571,7 +571,7 @@ ggplot(data.frame(summary(expo, type = "hazard")), aes(x = time)) +
 coxparm <- Surv(dat$time, dat$event, type="right")
 
 # define model formula
-parmform <- as.formula("coxparm ~ hhinc + rural + maxedu + region + migback + married + ever_div")
+parmform <- as.formula("coxparm ~ hhinc + rural + educ + region + migback + married + ever_div")
 
 # Cox PH model
 cox.ph.tab <- coxph(formula=parmform, data=dat)
@@ -611,7 +611,7 @@ AICs
 # Random Survival Forests #################################################
 #preliminary version
 
-fitform <- Surv(time, event) ~ hhinc + rural + maxedu + region + migback
+fitform <- Surv(time, event) ~ hhinc + rural + educ + region + migback
 
 set.seed(0692)
 rsf <- rfsrc(fitform, data = dat, forest = TRUE, ntree = 500, importance = TRUE)
