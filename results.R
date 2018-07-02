@@ -24,7 +24,7 @@ load("datfinal.RDA")
 # graphical representation of data set (see rpubs paper) (done)
 # descriptives table (done)
 # survival time density plot (done)
-# missing data plots before and after imputation
+# missing data plots before and after imputation (done)
 # distributions and densities (by state plots, draftmans plot, countour/3d)
 
 ##################################################################################
@@ -264,14 +264,18 @@ gg_miss_fct(x = dat, fct = firstyear)
 
 
 # Things to do:
+
 # Classic nonparametric estimators:
 # CDF, Survival function, cumulative hazard function for KM and Nelson/Aalen/Fleming-Harrington (done)
 # KM by strata (most interesting ones migback, highinc etc.) (done)
+
 # Cox PH regression:
 # results table, plot overall, ggadjust plots, schoenfeld test plot, hazard ratios, other
+
 # Comparison Parametric Models and Cox PH / KM:
 # Coefficient table for different distributions and Cox PH in comparison, AICs table (done)
 # Plot comparing Cox PH, KM, and parametric models (done)
+
 # Mordern nonparametric estimator: random survival forest:
 # survival function plots, plots for different strata, concordance index between models,
 # prediction error curve, partial dependence surface, VIMP (variable importance)
@@ -463,37 +467,41 @@ print(km.edu)
 ##################################################################################################
 
 
-#survival/rms to estimate models, survminer package for plots and diagnostics
+#survival package to estimate models, survminer package for plots and diagnostics
 
-#define survival object
+
+# define survival object
+
 coxsurv <- Surv(dat$time, dat$event, type="right")
 plot(coxsurv)
 
-#Cox PH model
+# define formula
 
-#using survival package
-cox.ph <- coxph(coxsurv ~ hhinc + rural + maxedu + region + migback + married , data=dat)
+coxform <- as.formula("coxsurv ~ hhinc + rural + maxedu + region + migback + married + ever_div")
 
-cox.ph <- coxph(coxsurv ~ hhinc + rural + maxedu + region + migback , data=dat)
-print(cox.ph)
+# estimate Cox regression
 
-#using rms package
-cox.ph2 <- cph(ccoxsurv ~ hhinc + rural + maxedu + region + migback + married , data=dat,
-               na.rm=FALSE, y=TRUE, x=TRUE)
+cox.ph <- coxph(coxform, data=dat)
 
 print(cox.ph)
-print(cox.ph2)
 
-#Schoenfeld test of cox ph assumption
-coxtest <- cox.zph(cox.ph)
-coxtest
-#Schoenfeld graphical test of cox ph assumption
-ggcoxzph(coxtest)
+# Cox PH model table
+
+stargazer(cox.ph)
+
+displayCoxPH(cox.ph, cap = "", dig.coef = 3, dig.p = 2)
+
+# table in overleaf is constructed from both outputs
 
 
-#adjusted (for covariates) survival curves from cox model
+# Forest plot of results
 
-#by highinc
+ggforest(cox.ph)
+
+
+# adjusted survival curves from cox model
+
+# by highinc
 medinc <- median(dat$hhinc, na.rm=TRUE)
 dat <- mutate(dat, highinc = ifelse(dat$hhinc > medinc, 2, 1))
 summary(dat$highinc)
@@ -501,16 +509,33 @@ rm(medinc)
 
 ggadjustedcurves(cox.ph, data = dat, variable = "highinc")
 
+# by education level (ISCED97)
 
-#by firstyear
+ggadjustedcurves(cox.ph, data = dat, variable = "educ")
 
-dat$firstyear <- as.integer(dat$firstyear)
-cu <- c(1984, 1990, 2000, 2010, 2015)
-dat$yearcut <- cut(dat$firstyear, cu, dig.lab = min(nchar(cu)))
-ggadjustedcurves(cox.ph, data = dat, variable="yearcut")
-rm(cu)
 
-rm(cox.ph, cox.ph2, coxtest, coxsurv)
+# model diagnostics (Schoenfeld test, influential observations)
+
+
+# Schoenfeld test of cox ph assumption
+
+coxtest <- cox.zph(cox.ph)
+coxtest
+
+# Schoenfeld graphical test of cox ph assumption
+
+ggcoxzph(coxtest)
+
+# scaled Schoenfeld plots for only one variable
+
+ggcoxzph(coxtest, var=c("hhinc", "maxedu"))
+
+# use Delta-Beta residuals to detect influential observations
+
+ggcoxdiagnostics(cox.ph, type = "dfbeta", ox.scale= "observation.id")
+
+
+rm(cox.ph, cox.ph, coxtest, coxsurv, coxform)
 
 
 ##################################################################################################
