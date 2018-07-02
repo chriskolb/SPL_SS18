@@ -21,6 +21,8 @@ pacman::p_load(
   grid,
   gridExtra,
   stargazer,
+  reporttools,
+  forestplot,
   Hmisc,
   pastecs,
   rio,
