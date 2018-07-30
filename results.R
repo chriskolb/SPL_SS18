@@ -12,6 +12,8 @@ source(".path.R")
 # source("packages.R")
 source("library.R")
 
+source("functions.R")
+
 load("datfinal.RDA")
 
 ##################################################################################
@@ -286,39 +288,34 @@ gg_miss_fct(x = dat, fct = firstyear)
 # Comparison Kaplan-Meier & Nelson-Aalen/Fleming-Harrington ######################################
 ##################################################################################################
 
+
+#### Function for ggsurvplot_combine #####
+
+# store survplot object and choose functional argument (default is Survival Function) 
+
+nonparametricKurves <- function(x,fun=NULL) {
+z <- ggsurvplot_combine(kmfh.all, data=dat, conf.int=T,
+                               legend.labs=c("KM", "Fleming-Harrington"), legend.title="Model",  
+                               fun=fun,
+                               risk.table=F,
+                               cumcensor=FALSE,
+                               censor=FALSE,
+                               linetype=c(1,1),
+                               size = 0.3)
+}
+
 # Kaplan-Meier estimator
 km.fit <- survfit(Surv(time,event, type="right") ~ 1, data=dat, type="kaplan-meier")
-
+# Fleming-Harrington estimator
 fh.fit <- survfit(Surv(time,event, type="right") ~ 1, data=dat, type="fleming-harrington")
-
 kmfh.all <- list(km.fit, fh.fit)
 
-surv.all <- ggsurvplot_combine(kmfh.all, data=dat, conf.int=T,
-                     legend.labs=c("KM", "Fleming-Harrington"), legend.title="Model",  
-                     risk.table=F,
-                     cumcensor=FALSE,
-                     censor=FALSE,
-                     linetype=c(1,1),
-                     size = 0.3)
-
-cumprop.all <- ggsurvplot_combine(kmfh.all, data=dat, conf.int=T,
-                               fun = "event",
-                               legend.labs=c("KM", "Fleming-Harrington"), legend.title="Model",  
-                               risk.table=F,
-                               cumcensor=FALSE,
-                               censor=FALSE,
-                               linetype=c(1,1),
-                               size = 0.3)
-
-cumhaz.all <- ggsurvplot_combine(kmfh.all, data=dat, conf.int=T,
-                               fun = "cumhaz",
-                               legend.labs=c("KM.", "Fleming-Harrington"), legend.title="Model",  
-                               risk.table=F,
-                               cumcensor=FALSE,
-                               censor=FALSE,
-                               linetype=c(1,1),
-                               xlim=c(0,30),
-                               size = 0.3)
+#Survival Function
+nonparametricKurves(surv.all)
+#Cumulative Event Function: f(y)=1-y
+nonparametricKurves(cumprop.all,"event")
+#Cumulative Hazard Function
+nonparametricKurves(cumhaz.all,"cumhaz")
 
 # put all plots in one graph
 
@@ -330,24 +327,29 @@ arrange_ggsurvplots(kmfh.glist, print = TRUE, ncol = 3, nrow = 1)
 # KM by strata ###################################################################################
 ##################################################################################################
 
+#### Function for Kaplan Meier Curves by Strata
+### Storing survObject, labs= category description, Legend Title
+kmGroupKurves <- function(x,labs,title,line=c(1,1),conf=T){
+x <- ggsurvplot(wide.fit, conf.int=conf,
+                     legend.labs=labs, legend.title=title,  
+                     censor=F,
+                     palette = "strata",
+                     risk.table = T,
+                     pval=TRUE,
+                     risk.table.height=.25,
+                     ylim=c(0,1),
+                     xlim=c(0,30),
+                     surv.median.line="hv",
+                     linetype=line,
+                     size = 0.5)
+print(x)
+}
 
 # KM by region ###################################################################################
 
 wide.fit <- survfit(Surv(time, event, type="right") ~ region, data=dat)
 
-km.reg <- ggsurvplot(wide.fit, conf.int=T,
-                      legend.labs=c("West", "East"), legend.title="Region",  
-                      censor=F,
-                      palette = "strata",
-                      risk.table = T,
-                      pval=TRUE,
-                      risk.table.height=.25,
-                      ylim=c(0,1),
-                      xlim=c(0,30),
-                      surv.median.line="hv",
-                      linetype=c(1,1),
-                      size = 0.5)
-print(km.reg)
+kmGroupKurves(km.reg, c("West", "East"), "Region")
 
 rm(wide.fit)
 
@@ -355,21 +357,10 @@ rm(wide.fit)
 # KM by migback ####################################################################
 
 wide.fit <- survfit(Surv(time, event, type="right") ~ migback, data=dat)
-km.mig <- ggsurvplot(wide.fit, conf.int=T,
-                      legend.labs=c("No", "Yes"), legend.title="Migr. Back.",  
-                      censor=F,
-                      palette = "strata",
-                      risk.table = T,
-                      pval=TRUE,
-                      risk.table.height=.25,
-                      ylim=c(0,1),
-                      xlim=c(0,30),
-                      surv.median.line="hv",
-                      linetype=c(1,1),
-                      size = 0.5)
-print(km.mig)
 
-rm(kmcurve, wide.fit)
+kmGroupKurves(km.mig, c("No", "Yes"), "Migr.Back.")
+
+rm(wide.fit)
 
 
 # KM by highinc/lowinc ###########################################################
@@ -378,43 +369,21 @@ medinc <- median(as.numeric(dat$hhinc), na.rm=TRUE)
 dat.inc <- mutate(dat, highinc = ifelse(dat$hhinc > medinc, 1, 0))
 summary(dat.inc$highinc)
 #define survival object and fit KM estimator
-inc.fit <- survfit(Surv(time, event, type="right") ~ highinc, data=dat.inc)
-km.inc <- ggsurvplot(inc.fit, conf.int=T,
-                     legend.labs=c("Low", "High"), legend.title="HH Inc.",  
-                     censor=F,
-                     palette = "strata",
-                     risk.table = T,
-                     pval=TRUE,
-                     risk.table.height=.25,
-                     ylim=c(0,1),
-                     xlim=c(0,30),
-                     surv.median.line="hv",
-                     linetype=c(1,1),
-                     size = 0.5)
-print(km.inc)
+wide.fit <- survfit(Surv(time, event, type="right") ~ highinc, data=dat.inc)
 
-rm(inc.fit, medinc, dat.inc)
+kmGroupKurves(km.inc,c("Low", "High"),"HH Inc.")
+
+rm(wide.fit, medinc, dat.inc)
 
 
 # KM by educ (ISCED 97) ###########################################################
 
 #define survival object and fit KM estimator
-edu.fit <- survfit(Surv(time, event, type="right") ~ educ, data=dat)
-km.edu <- ggsurvplot(edu.fit, conf.int=F,
-                     legend.labs=c("Elementary", "Medium", "Higher voc.", "High"), legend.title="Education",  
-                     censor=F,
-                     palette = "strata",
-                     risk.table = T,
-                     pval=TRUE,
-                     risk.table.height=.25,
-                     ylim=c(0,1),
-                     xlim=c(0,30),
-                     surv.median.line="hv",
-                     linetype=c(1,1,1,1),
-                     size = 0.4)
-print(km.edu)
+wide.fit <- survfit(Surv(time, event, type="right") ~ educ, data=dat)
 
-rm(edu.fit)
+kmGroupKurves(km.edu,c("Elementary", "Medium", "Higher voc.", "High"),"Education", line = c(1,1,1,1), conf=F)
+
+rm(wide.fit)
 
 # KM by cohorts 84-87 and 94-97 #########################################################
 
@@ -422,21 +391,11 @@ dat <- mutate(dat, cohort8494 = ifelse (dat$firstyear<=1987, 1,ifelse(dat$firsty
 summary(dat$cohort8494)
 table(dat$cohort8494)
 #define survival object and fit KM estimator
-coh.fit <- survfit(Surv(time, event, type="right") ~ cohort8494, data=dat)
-km.coh <- ggsurvplot(coh.fit, conf.int=T,
-                     legend.labs=c("84-87", "94-97"), legend.title="Cohorts",                       censor=F,
-                     palette = "strata",
-                     risk.table = T,
-                     pval=TRUE,
-                     risk.table.height=.25,
-                     ylim=c(0,1),
-                     xlim=c(0,30),
-                     surv.median.line="hv",
-                     linetype=c(1,1),
-                     size = 0.5)
-print(km.coh)
+wide.fit <- survfit(Surv(time, event, type="right") ~ cohort8494, data=dat)
 
-rm(coh.fit)
+kmGroupKurves(km.coh, c("84-87", "94-97"),"Cohorts")
+
+rm(wide.fit)
 
 
 # arrange plots ############################################################
