@@ -9,8 +9,8 @@ rm(list=ls())
 source(".path.R")
 
 # install and load packages
-# source("packages.R")
-source("library.R")
+source("packages.R")
+#source("library.R")
 
 source("functions.R")
 
@@ -288,22 +288,6 @@ gg_miss_fct(x = dat, fct = firstyear)
 # Comparison Kaplan-Meier & Nelson-Aalen/Fleming-Harrington ######################################
 ##################################################################################################
 
-
-#### Function for ggsurvplot_combine #####
-
-# store survplot object and choose functional argument (default is Survival Function) 
-
-nonparametricKurves <- function(x,fun=NULL) {
-z <- ggsurvplot_combine(kmfh.all, data=dat, conf.int=T,
-                               legend.labs=c("KM", "Fleming-Harrington"), legend.title="Model",  
-                               fun=fun,
-                               risk.table=F,
-                               cumcensor=FALSE,
-                               censor=FALSE,
-                               linetype=c(1,1),
-                               size = 0.3)
-}
-
 # Kaplan-Meier estimator
 km.fit <- survfit(Surv(time,event, type="right") ~ 1, data=dat, type="kaplan-meier")
 # Fleming-Harrington estimator
@@ -311,11 +295,11 @@ fh.fit <- survfit(Surv(time,event, type="right") ~ 1, data=dat, type="fleming-ha
 kmfh.all <- list(km.fit, fh.fit)
 
 #Survival Function
-nonparametricKurves(surv.all)
+surv.all <- nonparametricKurves()
 #Cumulative Event Function: f(y)=1-y
-nonparametricKurves(cumprop.all,"event")
+cumprop.all <- nonparametricKurves("event")
 #Cumulative Hazard Function
-nonparametricKurves(cumhaz.all,"cumhaz")
+cumhaz.all <- nonparametricKurves("cumhaz")
 
 # put all plots in one graph
 
@@ -327,29 +311,11 @@ arrange_ggsurvplots(kmfh.glist, print = TRUE, ncol = 3, nrow = 1)
 # KM by strata ###################################################################################
 ##################################################################################################
 
-#### Function for Kaplan Meier Curves by Strata
-### Storing survObject, labs= category description, Legend Title
-kmGroupKurves <- function(x,labs,title,line=c(1,1),conf=T){
-x <- ggsurvplot(wide.fit, conf.int=conf,
-                     legend.labs=labs, legend.title=title,  
-                     censor=F,
-                     palette = "strata",
-                     risk.table = T,
-                     pval=TRUE,
-                     risk.table.height=.25,
-                     ylim=c(0,1),
-                     xlim=c(0,30),
-                     surv.median.line="hv",
-                     linetype=line,
-                     size = 0.5)
-print(x)
-}
-
 # KM by region ###################################################################################
 
 wide.fit <- survfit(Surv(time, event, type="right") ~ region, data=dat)
 
-kmGroupKurves(km.reg, c("West", "East"), "Region")
+km.reg <- kmGroupKurves(c("West", "East"), "Region")
 
 rm(wide.fit)
 
@@ -358,7 +324,7 @@ rm(wide.fit)
 
 wide.fit <- survfit(Surv(time, event, type="right") ~ migback, data=dat)
 
-kmGroupKurves(km.mig, c("No", "Yes"), "Migr.Back.")
+km.mig <- kmGroupKurves(c("No", "Yes"), "Migr.Back.")
 
 rm(wide.fit)
 
@@ -371,7 +337,7 @@ summary(dat.inc$highinc)
 #define survival object and fit KM estimator
 wide.fit <- survfit(Surv(time, event, type="right") ~ highinc, data=dat.inc)
 
-kmGroupKurves(km.inc,c("Low", "High"),"HH Inc.")
+km.inc <- kmGroupKurves(c("Low", "High"),"HH Inc.")
 
 rm(wide.fit, medinc, dat.inc)
 
@@ -381,7 +347,7 @@ rm(wide.fit, medinc, dat.inc)
 #define survival object and fit KM estimator
 wide.fit <- survfit(Surv(time, event, type="right") ~ educ, data=dat)
 
-kmGroupKurves(km.edu,c("Elementary", "Medium", "Higher voc.", "High"),"Education", line = c(1,1,1,1), conf=F)
+km.edu <- kmGroupKurves(c("Elementary", "Medium", "Higher voc.", "High"),"Education", line = c(1,1,1,1), conf=F)
 
 rm(wide.fit)
 
@@ -393,7 +359,7 @@ table(dat$cohort8494)
 #define survival object and fit KM estimator
 wide.fit <- survfit(Surv(time, event, type="right") ~ cohort8494, data=dat)
 
-kmGroupKurves(km.coh, c("84-87", "94-97"),"Cohorts")
+km.coh <- kmGroupKurves(c("84-87", "94-97"),"Cohorts")
 
 rm(wide.fit)
 
@@ -442,7 +408,7 @@ coxform <- as.formula("coxsurv ~ hhinc + rural + maxedu + region + migback + mar
 
 cox.ph <- coxph(coxform, data=dat)
 
-print(cox.ph)
+summary(cox.ph)
 
 # Cox PH model table
 
@@ -459,7 +425,7 @@ ggforest(cox.ph)
 
 
 # adjusted survival curves from cox model
-
+# not needed later
 # by highinc
 medinc <- median(dat$hhinc, na.rm=TRUE)
 dat <- mutate(dat, highinc = ifelse(dat$hhinc > medinc, 2, 1))
