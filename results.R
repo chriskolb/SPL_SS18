@@ -297,15 +297,15 @@ kmfh.all <- list(km.fit, fh.fit)
 #Survival Function
 surv.all <- nonparametricKurves()
 #Cumulative Event Function: f(y)=1-y
-cumprop.all <- nonparametricKurves("event")
+#cumprop.all <- nonparametricKurves("event")
 #Cumulative Hazard Function
 cumhaz.all <- nonparametricKurves("cumhaz")
 
 # put all plots in one graph
 
-kmfh.glist <- list(surv.all, cumprop.all, cumhaz.all)
+kmfh.glist <- list(surv.all, cumhaz.all)
 
-arrange_ggsurvplots(kmfh.glist, print = TRUE, ncol = 3, nrow = 1)
+arrange_ggsurvplots(kmfh.glist, print = TRUE, ncol = 2, nrow = 1)
 
 ##################################################################################################
 # KM by strata ###################################################################################
