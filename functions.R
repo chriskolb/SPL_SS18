@@ -23,6 +23,8 @@ kmGroupKurves <- function(labs,title,line=c(1,1),conf=T){
                   palette = "strata",
                   risk.table = T,
                   pval=TRUE,
+                  pval.method = TRUE,
+                  log.rank.weights = "S2",
                   risk.table.height=.25,
                   ylim=c(0,1),
                   xlim=c(0,30),
