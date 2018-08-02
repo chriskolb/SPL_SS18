@@ -10,7 +10,6 @@ source(".path.R")
 
 # install and load packages
 source("packages.R")
-#source("library.R")
 
 source("functions.R")
 
@@ -310,6 +309,14 @@ arrange_ggsurvplots(kmfh.glist, print = TRUE, ncol = 2, nrow = 1)
 ##################################################################################################
 # KM by strata ###################################################################################
 ##################################################################################################
+
+# KM by gender ###################################################################################
+# 0 = male, 1 = female
+wide.fit <- survfit(Surv(time, event, type="right") ~ gender, data=dat)
+
+km.sex <- kmGroupKurves(c("Male", "Female"), "Gender")
+
+rm(wide.fit)
 
 # KM by region ###################################################################################
 

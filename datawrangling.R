@@ -5,9 +5,7 @@ rm(list=ls())
 source(".path.R")
 
 #install and load packages
-#source("packages.R")
-source("library.R")
-
+source("packages.R")
 
 
 ####################  Data cleaning #########################################################
