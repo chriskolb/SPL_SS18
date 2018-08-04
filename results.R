@@ -318,6 +318,28 @@ km.sex <- kmGroupKurves(c("Male", "Female"), "Gender")
 
 rm(wide.fit)
 
+# KM by Metropolitan Area ###################################################################################
+# 0 = Urban, 1 = Rural
+wide.fit <- survfit(Surv(time, event, type="right") ~ rural, data=dat)
+
+km.urban <- kmGroupKurves(c("Urban", "Rural"), "Metropolitan Area")
+
+rm(wide.fit)
+
+# KM by married divorced ###################################################################################
+
+wide.fit <- survfit(Surv(time, event, type="right") ~ ever_div, data=dat)
+
+km.div <- kmGroupKurves(c("No", "Yes"), "Ever Divorced")
+
+
+wide.fit <- survfit(Surv(time, event, type="right") ~ married, data=dat)
+
+km.marr <- kmGroupKurves(c("No", "Yes"), "Married")
+
+
+rm(wide.fit)
+
 # KM by region ###################################################################################
 
 wide.fit <- survfit(Surv(time, event, type="right") ~ region, data=dat)
@@ -380,17 +402,22 @@ km.plot1 <- arrange_ggsurvplots(km.glist1, ncol = 2, nrow = 1, print = FALSE,
                     surv.plot.height = 1)
 
 
-km.glist2 <- list(km.reg, km.coh)
+km.glist2 <- list(km.reg, km.urban)
 
 km.plot2 <- arrange_ggsurvplots(km.glist2, ncol = 2, nrow = 1, print = FALSE,
                     risk.table.height = 0.25,
                     surv.plot.height = 1)
 
+km.glist3 <- list(km.marr,km.div)
+km.plot3 <- arrange_ggsurvplots(km.glist3, ncol = 2, nrow = 1, print = FALSE,
+                                risk.table.height = 0.25,
+                                surv.plot.height = 1)
 
 # print KM by strata plots ##################################################
 
 print(km.plot1)
 print(km.plot2)
+print(km.plot3)
 print(km.edu)
 
 
@@ -398,14 +425,10 @@ print(km.edu)
 # Cox Proportional Hazards Regression ############################################################
 ##################################################################################################
 
-
 #survival package to estimate models, survminer package for plots and diagnostics
-
-
 # define survival object
 
 coxsurv <- Surv(dat$time, dat$event, type="right")
-plot(coxsurv)
 
 # define formula
 
@@ -414,7 +437,6 @@ coxform <- as.formula("coxsurv ~ hhinc + rural + maxedu + region + migback + mar
 # estimate Cox regression
 
 cox.ph <- coxph(coxform, data=dat)
-
 summary(cox.ph)
 
 # Cox PH model table
@@ -427,6 +449,14 @@ displayCoxPH(cox.ph, cap = "", dig.coef = 3, dig.p = 2)
 
 
 # Forest plot of results
+dat <- within(dat,{
+    rural <- factor(rural, labels = c("urban", "rural"))
+    region <- factor(region, labels = c("west", "east"))
+    migback <- factor(migback, labels = c("no migr. backgr.", "migr. backgr."))
+    married <- factor(married, labels = c("not married", "married"))
+    ever_div <- factor(ever_div, labels = c("never divorces", "ever divorced"))
+  })
+cox.ph <- coxph(coxform, data=dat)
 
 ggforest(cox.ph)
 
