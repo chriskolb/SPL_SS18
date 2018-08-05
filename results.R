@@ -476,13 +476,15 @@ ggadjustedcurves(cox.ph, data = dat, variable = "highinc")
 ggadjustedcurves(cox.ph, data = dat, variable = "educ")
 
 
-# model diagnostics (Schoenfeld test, influential observations)
+##### Model Diagnostics #####
+### (Schoenfeld test, influential observations) ###
 
 
 # Schoenfeld test of cox ph assumption
 
-coxtest <- cox.zph(cox.ph)
+coxtest <- cox.zph(cox.ph, transform = "km")
 coxtest
+stargazer(coxtest$table, out = "schoenfeld.tex")
 
 # Schoenfeld graphical test of cox ph assumption
 
