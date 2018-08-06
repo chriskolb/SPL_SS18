@@ -12,7 +12,8 @@ Description :
               
 
 
-Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation, hazard rate, Kaplan Meier'
+Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation,
+	    hazard rate, Kaplan Meier'
 
 Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
 
