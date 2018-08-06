@@ -18,6 +18,7 @@ pacman::p_load(
   pec,
   flexsurv,
   ggfortify,
+  broom,
   grid,
   gridExtra,
   stargazer,

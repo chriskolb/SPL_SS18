@@ -489,9 +489,9 @@ stargazer(coxtest$table, out = "schoenfeld.tex")
 # Schoenfeld graphical test of cox ph assumption
 
 # scaled Schoenfeld plots for only selected variables (have to be continuous)
-ggcoxzph(coxtest, resid = T, point.alpha = 0.4, var=c("hhinc","maxedu"))
+ggcoxzph(coxtest, resid = T, point.col="lightcoral", point.alpha = 0.4, var=c("hhinc","maxedu"))
 
-ggcoxzph(coxtest, point.alpha = 0.4)
+ggcoxzph(coxtest, point.alpha = 0.4, point.col="lightcoral")
 
 
 ###--------- Testing for influential Observations ----------####
@@ -501,7 +501,7 @@ ggcoxzph(coxtest, point.alpha = 0.4)
 ggcoxdiagnostics(cox.ph, type = "dfbetas", ox.scale= "observation.id", hline.col = "darkgreen", hline.alpha = 0.5, point.alpha = 0.4, point.col = "lightcoral", sline.alpha = 0.4, sline.col = "dodgerblue")
 
 
-rm(cox.ph, cox.ph, coxtest, coxsurv, coxform)
+rm(cox.ph, coxtest, coxsurv, coxform)
 
 
 ##################################################################################################
@@ -517,8 +517,10 @@ parmform <- as.formula("coxparm ~ hhinc + rural + maxedu + region + migback + ma
 # Kaplan-Meier estimator
 kapm <- survfit(coxparm ~ 1, data=dat)
 
-# fortify puts survival table into from kapm object in data frame
+# fortify as well as tidy from the broom package
+# puts survival table from kapm object into a data frame
 kap.dat <- fortify(kapm)
+#kap.dat2 <- tidy(kapm)
 
 # Cox PH model
 cox.ph <- coxph(formula=parmform, data=dat)
