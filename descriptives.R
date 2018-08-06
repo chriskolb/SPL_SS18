@@ -25,7 +25,7 @@ sum.dat <- dat
 sum.dat$gender <- as.integer(as.character(sum.dat$gender))
 sum.dat$married <- as.integer(as.character(sum.dat$married))
 sum.dat$ever_div <- as.integer(as.character(sum.dat$ever_div))
-sum.dat$region <- as.integer(sum.dat$region))
+sum.dat$region <- as.integer(sum.dat$region)-1
 sum.dat$rural <- as.integer(as.character(sum.dat$rural))
 sum.dat$migback <- as.integer(as.character(sum.dat$migback))
 
