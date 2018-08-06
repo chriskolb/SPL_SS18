@@ -452,9 +452,9 @@ displayCoxPH(cox.ph, cap = "", dig.coef = 3, dig.p = 2)
 dat <- within(dat,{
     rural <- factor(rural, labels = c("urban", "rural"))
     region <- factor(region, labels = c("west", "east"))
-    migback <- factor(migback, labels = c("no migr. backgr.", "migr. backgr."))
-    married <- factor(married, labels = c("not married", "married"))
-    ever_div <- factor(ever_div, labels = c("never divorced", "ever divorced"))
+    migback <- factor(migback, labels = c("No", "Yes"))
+    married <- factor(married, labels = c("No", "Yes"))
+    ever_div <- factor(ever_div, labels = c("No", "Yes"))
   })
 cox.ph <- coxph(coxform, data=dat)
 
@@ -489,16 +489,16 @@ stargazer(coxtest$table, out = "schoenfeld.tex")
 # Schoenfeld graphical test of cox ph assumption
 
 # scaled Schoenfeld plots for only selected variables (have to be continuous)
-ggcoxzph(coxtest, resid = T, point.alpha = 0.4, var=c("hhinc","maxedu"), caption = "Schoenfeld residual plot of HH Income and Years of Education")
+ggcoxzph(coxtest, resid = T, point.alpha = 0.4, var=c("hhinc","maxedu"))
 
-ggcoxzph(coxtest)
+ggcoxzph(coxtest, point.alpha = 0.4)
 
 
 ###--------- Testing for influential Observations ----------####
 
-# use Delta-Beta residuals to detect influential observations
+# use Delta-Beta residuals to detect influential observations scaled by standard errors of coefficients
 
-ggcoxdiagnostics(cox.ph, type = "dfbeta", ox.scale= "observation.id")
+ggcoxdiagnostics(cox.ph, type = "dfbetas", ox.scale= "observation.id", hline.col = "darkgreen", hline.alpha = 0.5, point.alpha = 0.4, point.col = "lightcoral", sline.alpha = 0.4, sline.col = "dodgerblue")
 
 
 rm(cox.ph, cox.ph, coxtest, coxsurv, coxform)
