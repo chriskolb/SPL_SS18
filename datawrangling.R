@@ -591,7 +591,7 @@ gg_miss_fct(x = dataw, fct = firstyear)
 # firstfailyear should not be imputed
 dataw$firstfailyear[is.na(dataw$firstfailyear)] <- -1
 
-dat <- impute(data = dataw, nimpute = 5)
+dat <- impute(data = dataw, nimpute = 3)
 
 
 # set firstfailyear back to NA
