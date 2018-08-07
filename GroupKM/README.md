@@ -3,7 +3,7 @@
 
 ```yaml
 
-Name of QuantLet : Survival Analysis and Homeownership
+Name of QuantLet : 
 
 Published in : SPL
 
@@ -16,5 +16,3 @@ Keywords : 'survival analysis, non-parametric estimation, semi-parametric estima
 	    hazard rate, Kaplan Meier'
 
 Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
-
-```
