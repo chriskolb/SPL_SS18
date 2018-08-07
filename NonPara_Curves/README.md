@@ -20,7 +20,7 @@ Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
 ```
 
 ![Picture1](ComparisonKM_FH.png)
-
+### R Code
 ```R
 rm(list=ls())
 #setwd(path) in path.R
