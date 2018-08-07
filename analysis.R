@@ -370,15 +370,31 @@ stargazer(cox.ph.tab, weibull.tab, expo.tab, loglog.tab, lnormal.tab, align=F)
 
 # AIC for parametric models (model selection)
 
-AICs <- matrix(data = NA, nrow = 4, ncol = 1)
+AICs <- matrix(data = NA, nrow = 4, ncol = 2)
 AICs[1, 1] <- weibull$AIC
+AICs[1, 2] <- weibull$loglik
+
 AICs[2, 1] <- expo$AIC
+AICs[2, 2] <- expo$loglik
+
 AICs[3, 1] <- loglog$AIC
+AICs[3, 2] <- loglog$loglik
+
 AICs[4, 1] <- lnormal$AIC
+AICs[4, 2] <- lnormal$loglik
+
 rownames(AICs) <- c("Weibull", "Exponential", "Log-Logistic", "Log-Normal")
-colnames(AICs) <- "AIC"
-AICs
+colnames(AICs) <- c("AIC", "Log-Likelihood")
+t(AICs)
 #Log-normal has best fit
+stargazer(t(AICs), out="aic.tex")
+
+#### plot log-normal cumulative hazard against KM ####
+
+kmcumhaz <- ggsurvplot(kapm, fun = "cumhaz")
+# Log-normal distribution
+lnormal <- flexsurvreg(coxparm~1, data = dat, dist = "lnorm")
+lncumhaz <- ggflexsurvplot(lnormal, fun="cumhaz")
 
 
 # Random Survival Forests #################################################
