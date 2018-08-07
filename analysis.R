@@ -363,9 +363,8 @@ loglog.tab <- survreg(formula = parmform, data = dat, dist = "loglogistic")
 lnormal.tab <- survreg(formula = parmform, data = dat, dist = "lognormal")
 
 
-# Results table (nees more options maybe)
-# should maybe be odds ratios/relative risk/sth instead of coefficients
-stargazer(cox.ph.tab, weibull.tab, expo.tab, loglog.tab, lnormal.tab, align=F)
+# Results table 
+stargazer(cox.ph.tab, weibull.tab, loglog.tab, lnormal.tab, align=F, out = "comparison.tex")
 
 
 # AIC for parametric models (model selection)
