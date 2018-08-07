@@ -1,4 +1,8 @@
-tidy_source("NonPara_Curves.R", width.cutoff = 80, indent = 4)
+rm(list=ls())
+#setwd(path) in path.R
+source(".path.R")
+#install and load packages
+source("packages.R")
 
 load("datfinal.RDA")
 
