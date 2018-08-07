@@ -5,7 +5,6 @@ if (!require("pacman")) install.packages("pacman")
 pacman::p_load(
   bigmemory,
   biganalytics,
-  dplyr,
   plm,
   car,
   varhandle,
@@ -33,6 +32,7 @@ pacman::p_load(
   ggridges,
   GGally,
   # those beneath always load last
+  dplyr,
   readr,
   ggplot2,
   tidyverse)
