@@ -1,4 +1,31 @@
-####### Set Up #######
+##########################################################################################
+##########################################################################################
+####################  Data Wrangling  ####################################################
+##########################################################################################
+##########################################################################################
+
+
+#Note1: All scripts and SOEP data files need to be in the same directory
+#Note2: .path.R file needs to be specified by the user
+
+#Structure:
+#0: Set-up
+#1: Prepare individual files for merging
+#2: Merge individual files
+#3: Data clearning on merged file
+#4: Create variables (covariates, time/status variable)
+#5: First imputation (using forward values)
+#6: Change to wide format data set
+#7: Recoding of categorical variables
+#8: Second imputation (using random forests)
+
+
+##########################################################################################
+####Set Up ###############################################################################
+##########################################################################################
+
+
+#clear workspace
 rm(list=ls())
 
 #setwd(path) in path.R
@@ -8,10 +35,14 @@ source(".path.R")
 source("packages.R")
 
 
-####################  Data cleaning #########################################################
+#First, merge relevant SOEP files into one data set
 
+##########################################################################################
+###### Prepare individual files for merging ##############################################
+##########################################################################################
 
 #### pequiv ####
+
 #information on individual (household head) characteristics from pequiv.csv
 
 pequiv <- import(paste(path, "pequiv.csv" , sep = "/"), setclass = "data.table")
@@ -53,6 +84,7 @@ save(hgensmall, file="hgensmall.RDA")
 rm(hgen, hgenvariables, hgensmall )
 
 #### pgen ######
+
 #information on individual education from pgen (ISCED Classification)
 
 pgen <- import(paste(path, "pgen.csv" , sep = "/"),setclass = "data.table")
@@ -69,49 +101,14 @@ save(pgensmall, file="pgensmall.RDA")
 
 rm(pgen, pgenvariables, pgensmall )
 
-###########################################################################################
-#Additional variables from files with minor importance
-#rm(list=ls())
-
-#pl <- import(paste(path, "pl.csv" , sep = "/"),setclass = "data.table")
-
-#save(pl, file="pl.RDA")
-
-# Gibt z.B. noch Variablen bzgl. Erbe damit man da noch genauer Observations entfernen kÃ¶nnte, plb0022: employment Status: Restschuld Haus, Wohnung plc0411, plc0348 Eigentumsanteil Haus, Wohnung
-#plvariables <- c("pid", "syear", "plb0022", "plh0204", "plc0411", "plc0348")
-
-#plsmall <- select(pl, one_of(plvariables))
-#plsmall = as.data.table(plsmall)
-
-#save(plsmall, file="plsmall.RDA")
-
-#rm(pl, plvariables)
-#View(plsmall)
-
-
-###############################################################################
-#information on parents education
-
-
-#biol <- import(paste(path, "biol.csv" , sep = "/"),setclass = "data.table")
-
-#biol: lb0090 (edumom), lb0091 (edudad)
-#biolvariables <- c("pid" , "syear", "lb0090", "lb0091")
-
-#biolsmall <- select(biol, one_of(biolvariables))
-#biolsmall = as.data.table(biolsmall)
-
-#save(biolsmall, file="biolsmall.RDA")
-
-
-#rm(biol, biolvariables, biolsmall)
 
 #### ppfadl #######
+
 #information on migration background from pffad.csv
 
 ppfadl <- import(paste(path, "ppfadl.csv" , sep = "/"),setclass = "data.table")
 
-# migration baclground: migback
+# migration background: migback
 ppfadlvariables <- c("pid", "syear", "migback")
 
 ppfadlsmall <- select(ppfadl, one_of(ppfadlvariables))
@@ -124,6 +121,7 @@ rm(ppfadl, ppfadlvariables, ppfadlsmall)
 
 
 ##### hbrutto #######
+
 #information on spatial category - Urban / Rural
 
 
@@ -141,7 +139,7 @@ save(hbruttosmall, file="hbruttosmall.RDA")
 rm(hbrutto, hbruttovariables, hbruttosmall)
 
 ##########################################################################################
-###### Merge Files ############################################################################
+###### Merge invidividual Files ##########################################################
 ##########################################################################################
 
 load(file="pequivsmall.RDA")
@@ -155,9 +153,7 @@ data = left_join(pequivsmall, hgensmall, by = c("hid", "syear"))
 data = left_join(data, hbruttosmall, by = c("hid", "syear"))
 data = left_join(data, ppfadlsmall, by = c("pid", "syear"))
 data = left_join(data, pgensmall, by = c("pid", "syear"))
-#data = left_join(data, biolsmall, by = c("pid", "syear"))
 
-#names(data)
 
 rm(hgensmall, pequivsmall, ppfadlsmall, hbruttosmall, pgensmall)
 
@@ -165,7 +161,7 @@ rm(hgensmall, pequivsmall, ppfadlsmall, hbruttosmall, pgensmall)
 data = as.data.table(data)
 
 ##########################################################################################
-##### Data cleaning on merged data set #######################################################
+##### Data cleaning on merged data set ###################################################
 ##########################################################################################
 
 # mark dissolved households (more than one PID per HID)
@@ -175,15 +171,12 @@ data = as.data.table(data)
 dissolvedata <- aggregate(data$pid ~ data$hid, data , function(x) (max(x)-min(x)))
 names(dissolvedata)[names(dissolvedata) == "data$pid"] <- "dissolved"
 names(dissolvedata)[names(dissolvedata) == "data$hid"] <- "hid"
-summary(dissolvedata$dissolved)
 
 data = left_join(data, dissolvedata, by = c("hid"))
 
-#table(data$dissolved)
-#View(data[,c("hid", "pid", "syear", "dissolved")])
-
 # remove dissolved households from analysis
 # obs go from 260k to 230k, which corresponds to what we expect
+
 data <- subset(data, dissolved == 0)
 
 rm(dissolvedata)
@@ -212,55 +205,46 @@ data = left_join(data, minage.dat, by = "hid")
 summary(data$minage)
 rm(minage.dat)
 
-#lapply(list(x, y, z), summary) <- summarize from stata
-
 head(data[,c("hid", "syear", "d11101", "minage")])
 
-# minage==25 reduces data from ~215k to <30k !
 
-# keep only individuals that were surveyed starting before or at age 30
 # reduces dataset from ~210k to 64k
 # reducing to minage<=25 reduces dataset to 29k observations
 
 data <- subset(data, minage <= 25)
 
 
-save(data, file="data.RDA")
-#rm(list=ls())
 
 ##########################################################################################
-# create indicators and time variables ###################################################
+#### create status and time variables and covariates #####################################
 ##########################################################################################
 
-load(file = "data.RDA")
 
-# change variable indicates type of change in homeownership from last year to current year
+# the change variable indicates type of change in homeownership from last year to current year
 
 # hgowner lagged variable 
 setDT(data)[, laghgowner:= shift(hgowner), hid]
-summary(data$laghgowner)
 
 # indicator for renting in current period
 data$rent <- 0
 data$rent[data$hgowner>=2 & data$hgowner<=5] <-1
-summary(data$rent)
 
 # indicator for home ownership in current period
 data$owner <- 0 
 data$owner[data$hgowner == 1] <- 1
-summary(data$owner)
+
 
 #L.rent
 data$lrent <- 0
 data$lrent[data$laghgowner>=2 & data$laghgowner<=5] <- 1
 data$lrent[is.na(data$laghgowner)] <- NA
-summary(data$lrent)
+
 
 # L.owner
 data$lowner <- 0
 data$lowner[data$laghgowner == 1] <- 1
 data$lowner[is.na(data$laghgowner)] <- NA
-summary(data$lowner)
+
 
 # create change variable
 # coding: -2 = owning to renter, -1 = first obs of individual, 0 = no change, 1 = renter to owner
@@ -269,7 +253,6 @@ data$change[(data$lowner == 1 & data$owner == 1) | (data$lrent == 1 & data$rent 
 data$change[data$lrent == 1 & data$owner == 1] <- 1
 data$change[is.na(data$lrent)] <- -1
 data$change[data$lowner == 1 & data$rent == 1] <- -2
-summary(data$change)
 table(data$change)
 unique(data$change)
 
@@ -277,10 +260,10 @@ unique(data$change)
 # failure marks change from renter to owner during syear-1 to syear
 data$failure <- 0
 data$failure[data$change == 1] <- 1
-summary(data$failure)
 
 
-# create first year of observation variable
+
+# create 'first year of observation' variable
 fyears <- aggregate(syear ~ hid, data, function(x) min(x))
 names(fyears)[names(fyears) == "syear"] <- "firstyear"
 data = left_join(data, fyears, by = "hid")
@@ -315,7 +298,7 @@ table(data$failureflag)
 rm(failure.dat)
 
 
-# mark all households where ownerhip failure (change= -1) occurs at some point
+# mark all households where ownership failure (change= -1) occurs at some point
 failure2.dat <- aggregate(change ~ hid, data, function(x) min(x))
 names(failure2.dat)[names(failure2.dat) == "change"] <- "failure2flag"
 data = left_join(data, failure2.dat, by = "hid")
@@ -397,7 +380,7 @@ data <- mutate(data, i11101 = i11101/1000)
 names(data)
 
 ###########################################################################################
-######## Long Imputation #########################################################################
+##### First Imputation by using forward (next year) values ################################
 ###########################################################################################
 
 # First Imputation: 
@@ -422,9 +405,7 @@ lapply(list(data$i11101, data$hhincimp, data$shiftincome, data$shift2income), su
 
 ###### Impute education #########
 
-### compare missing values and data quality between d11109 and pgisced97
-### isced97 variable comprises of half of d11109 missing values 
-
+# isced97 classification has fewer missings than years of education variable
 # split isced97 in 4 homogenous groups
 # 0 = elementary education, 1 = medium education, 2 = higher vocational, 3 = high education
 
@@ -452,21 +433,13 @@ data$d11109[data$d11109 == -1] <- NA
 
 lapply(list(data$d11109, data$maxedu, data$educ), summary) 
 
-
 ##########################################################################################
-save(data, file="datalong.RDA")
-
+##### Switch to Wide Format Data Set #####################################################
 ##########################################################################################
-######## Wide Format Data Set ###################################################################
-##########################################################################################
-
-load("datalong.RDA")
-
-####### wide format ####################################################################
 
 # create time-invariant covariates
 # if covariate is constant over time, no issue
-# for time-changing covariates, take value at syear=firstyear or long-imputed values
+# for time-changing covariates, take value at first year of observation or first-imputed value
 
 
 dataw <- subset(data, syear == firstyear)
@@ -486,9 +459,6 @@ names(dataw) <- c( "hid", "pid", "event", "gender", "married", "educ", "ever_div
                     "hhinc2", "state", "region", "minage", "firstyear",
                     "lastyear", "birthyear", "firstfailyear", "migback", "maxedu", "hhinc", "rural")
 
-# View(firstvars)
-
-summary(dataw$event)
 
 
 # sort data set by hid
@@ -509,8 +479,6 @@ dataw <- mutate(dataw,
                  time = ifelse(dataw$event==1, 
                                dataw$firstfailyear- dataw$firstyear +1,
                                dataw$lastyear - dataw$firstyear +1))
-hist(dataw$time)
-#dataw$minage <- NULL
 dataw$hid <- NULL
 dataw$pid <- NULL
 
@@ -526,6 +494,10 @@ names(dataw)[names(dataw) == "tvar"] <- "time"
 dataw <- cbind(pnr, dataw)
 rm(pnr, tvar)
 
+
+##########################################################################################
+##### Recoding of categorical variables  #################################################
+##########################################################################################
 
 # recoding of categorical variables in wide data set
 
@@ -561,7 +533,7 @@ dataw$rural[dataw$rural<0] <- NA
 dataw <- mutate(dataw, rural = ifelse(dataw$rural==2,1,0))
 
 
-# recording of class(var)
+# recording of object class
 # needed for imputation algorithm to recognize categorical variables
 dataw$gender <- as.factor(dataw$gender)
 dataw$married <- as.factor(dataw$married)
@@ -573,9 +545,9 @@ dataw$migback <- as.factor(dataw$migback)
 dataw$educ <- as.factor(dataw$educ)
 
 
-###########################################################################################
-# Wide Imputation #########################################################################
-###########################################################################################
+##########################################################################################
+#### Second Imputation using random forests ################################################
+##########################################################################################
 
 gg_miss_fct(x = dataw, fct = firstyear)
 
@@ -601,7 +573,10 @@ dat$firstfailyear[dat$firstfailyear == -1 ] <- NA
 gg_miss_fct(x = dat, fct = firstyear)
 
 
-################ Final Save ##########################################################################
+##########################################################################################
+##### Final Save #########################################################################
+##########################################################################################
+
 save(dat, file="datfinal.RDA")
 
 
