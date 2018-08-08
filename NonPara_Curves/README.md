@@ -23,11 +23,18 @@ Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
 ### R Code
 ```R
 rm(list=ls())
-#setwd(path) in path.R
-source(".path.R")
-#install and load packages
-source("packages.R")
 
+# set working directory setwd('C:/...') 
+# setwd('~/...')    # linux/mac os
+# setwd('/Users/...') # windows
+
+#install and load packages
+libraries = c("survival", "rms", "survminer", "dplyr", "readr", "ggplot2")
+lapply(libraries, function(x)if(!(x %in% installed.packages()))
+   {install.packages(x)})
+lapply(libraries, library, quietly=TRUE, character.only=TRUE)
+
+#load dataset
 load("datfinal.RDA")
 
 #### Function for Kaplan Meier Curves by Strata ####
@@ -65,3 +72,4 @@ cumhaz.all = nonparametricKurves("cumhaz")
 # put all plots in one graph
 kmfh.glist = list(surv.all, cumhaz.all)
 arrange_ggsurvplots(kmfh.glist, print = TRUE, ncol = 2, nrow = 1)
+```
