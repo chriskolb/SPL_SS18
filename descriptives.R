@@ -5,20 +5,40 @@
 ##################################################################################
 ##################################################################################
 
-# 2 do:
-# graphical representation of data set (see rpubs paper) (done)
-# descriptives table (done)
-# survival time density plot (done)
-# missing data plots before and after imputation (done)
-# distributions and densities (by state plots, draftmans plot, countour/3d)
+#Note1: All scripts and SOEP data files need to be in the same directory
+#Note2: .path.R file needs to be specified by the user
+
+#Structure:
+#0: Set-up
+#1: Summary table
+#2: Data structure visualization
+#3: Density plot of survival times
+#4: Density plots by federal states
+#5: Missings plot (in datawrangling.R)
+
+
+##########################################################################################
+####Set Up ###############################################################################
+##########################################################################################
+
+
+#clear workspace
+rm(list=ls())
+
+#setwd(path) in path.R
+source(".path.R")
+
+#install and load packages
+source("packages.R")
+
+load("datfinal.RDA")
+
 
 ##################################################################################
-# summary table ##################################################################
+#### summary table ###############################################################
 ##################################################################################
 
 #recode factors as numeric for them to be included in table
-
-load("datfinal.RDA")
 
 sum.dat <- dat
 
@@ -50,7 +70,7 @@ rm(sum.dat)
 
 
 ##################################################################################
-# data structure visualization ###################################################
+#### Data structure visualization ################################################
 ##################################################################################
 
 
@@ -75,7 +95,7 @@ ggplot(dat.str1, aes(x = pnr, y = time)) +
   labs(y = "Time (years)", x = "Subject ID") + coord_flip() + theme_classic()
 
 ##################################################################################
-# density plot of survival time ##################################################
+#### Density plot of survival time ###############################################
 ##################################################################################
 
 dens.dat <- subset(dat, event==1)
@@ -103,12 +123,10 @@ lines(density(dens.dat$time, from = 0, to = 30), # density plot
 
 
 ##################################################################################
+### Density plots by federal states ##############################################
 ##################################################################################
 
-
-
-# distribution of time to failure by state
-
+#### distribution of time to event by state ###
 dist <- subset(dat, event==1)
 dist$yeargroup <- as.factor(dist$firstyear)
 levels(dist$state)
@@ -119,7 +137,7 @@ ggplot(
   aes(x = dist$time, y = dist$state, fill=dist$state)
 ) +
   geom_density_ridges_gradient(
-    aes(fill = ..x..), scale = 3, size = 0.3
+    aes(fill = ..x..), scale = 2.5, size = 0.3
   ) +
   scale_fill_gradientn(
     colours = c("#0D0887FF", "#CC4678FF", "#F0F921FF"),
@@ -129,20 +147,15 @@ ggplot(
   labs(title = 'Density of Time to Event', x = "Time", y = "States")
 
 
-ggplot(dist, aes(x = time, y = state, fill = state)) + 
-  geom_density_ridges(scale = 2.5) + theme_minimal() +
-  scale_fill_cyclical(values = c("blue", "green")) +
-  labs(title = 'Density of Time to Event', x = "Time", y = "States")
-
 rm(dist)
 
-# distribution of hhinc by State
-
+#### distribution of hhinc by State ###
 dist <- subset(dat, hhinc<90000)
 dist$yeargroup <- as.factor(dist$firstyear)
 levels(dist$state)
 hist(dist$hhinc)
 
+# gradient color style
 ggplot(
   dist, 
   aes(x = dist$hhinc, y = dist$state, fill=dist$region)
@@ -157,7 +170,7 @@ ggplot(
   theme_ridges() +
   labs(title = 'Density of Household Income ', x = "Household Income", y = "States")
 
-
+# alternating color style
 ggplot(dist, aes(x = hhinc, y = state, fill = state)) + 
   geom_density_ridges(scale = 2.5) + theme_minimal() +
   scale_fill_cyclical(values = c("blue", "green")) +
@@ -167,78 +180,8 @@ rm(dist)
 
 
 
-# Distribution of educational attainment by State
+##################################################################################
+### Missings plot ################################################################
+##################################################################################
 
-
-dist <- subset(dat, event==1)
-dist$yeargroup <- as.factor(dist$firstyear)
-levels(dist$state)
-hist(dist$maxedu)
-
-ggplot(
-  dist, 
-  aes(x = dist$maxedu, y = dist$state, fill=dist$state)
-) +
-  geom_density_ridges_gradient(
-    aes(fill = ..x..), scale = 2.5, size = 0.3
-  ) +
-  scale_fill_gradientn(
-    colours = c("#0D0887FF", "#CC4678FF", "#F0F921FF"),
-    name = "Duration"
-  )+
-  theme_ridges() +
-  labs(title = 'Density of Years of eduation', x = "Education", y = "States")
-
-
-ggplot(dist, aes(x = maxedu, y = state, fill = state)) + 
-  geom_density_ridges(scale = 2.5) + theme_minimal() +
-  scale_fill_cyclical(values = c("blue", "green")) +
-  labs(title = 'Density of Years of Education', x = "Education", y = "States")
-
-rm(dist)
-
-
-
-
-# area + contour 2d density
-ggplot(dat, aes(x=maxedu, y=hhinc) ) +
-  stat_density_2d(aes(fill = ..level..), geom = "polygon", colour="white",
-                  n=100, h=NULL)
-
-
-
-# Draftmans Plot
-
-pairplotcont <- dat[, c("hhinc", "maxedu", "time")]
-pairplotdisc <- dat[, c("gender", "event", "married", "region")]
-
-pairplot <- dat[, c("time", "event", "hhinc", "maxedu", "migback", "rural")]
-
-pairs(pairplotcont, main = "Survival Data", pch = 21, bg = c("red", "blue")[unclass(dat$region)])
-
-ggpairs(pairplot, lower = list(continuous = "points", combo = "box", discrete="facetbar"))
-
-ggpairs(pairplotdisc, lower = list(discrete="box"))
-
-ggpairs(pairplotcont, lower = list(continuous = "smooth_loess"), diag = list(continuous = "density"))
-
-
-rm(pairplotcont, pairplotdisc)
-
-# Visualization of missing values in wide dataset #
-# In case of income, a lot of zero values not defined as NA
-dat$hhinc[dat$hhinc < 0] <- NA
-
-#few missings in final data set => no surprise b/c of generated variables
-
-
-sapply(dat, function(x) sum(is.na(x)))
-
-aggr_plot <- aggr(dat, col=c('navyblue','red'), numbers=TRUE, sortVars=TRUE,
-                  labels=names(dat), cex.axis=.7, gap=3, 
-                  ylab=c("Histogram of missing data","Pattern"))
-rm(aggr_plot)
-
-gg_miss_fct(x = dat, fct = firstyear)
-
-#View(dat)
+# created in datawrangling.R script, because it needs to be created before RF imputation
