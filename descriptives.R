@@ -31,6 +31,7 @@ source(".path.R")
 #install and load packages
 source("packages.R")
 
+#load data
 load("datfinal.RDA")
 
 
