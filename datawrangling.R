@@ -44,7 +44,6 @@ source("packages.R")
 #### pequiv ####
 
 #information on individual (household head) characteristics from pequiv.csv
-
 pequiv <- import(paste(path, "pequiv.csv" , sep = "/"), setclass = "data.table")
 
 #restrict dataset to individuals aged 24 to 65
@@ -67,8 +66,8 @@ save(pequivsmall, file="pequivsmall.RDA")
 rm(pequiv, pequivnew, pequivvariables, pequivsmall)
 
 #### hgen #####
-#information on household renting/ownership status from hgen.csv
 
+#information on household renting/ownership status from hgen.csv
 hgen <- import(paste(path, "hgen.csv" , sep = "/"),setclass = "data.table")
 
 
@@ -85,8 +84,7 @@ rm(hgen, hgenvariables, hgensmall )
 
 #### pgen ######
 
-#information on individual education from pgen (ISCED Classification)
-
+#information on individual education from pgen.csv (ISCED Classification)
 pgen <- import(paste(path, "pgen.csv" , sep = "/"),setclass = "data.table")
 
 
@@ -105,7 +103,6 @@ rm(pgen, pgenvariables, pgensmall )
 #### ppfadl #######
 
 #information on migration background from pffad.csv
-
 ppfadl <- import(paste(path, "ppfadl.csv" , sep = "/"),setclass = "data.table")
 
 # migration background: migback
@@ -123,8 +120,6 @@ rm(ppfadl, ppfadlvariables, ppfadlsmall)
 ##### hbrutto #######
 
 #information on spatial category - Urban / Rural
-
-
 hbrutto <- import(paste(path, "hbrutto.csv" , sep = "/"),setclass = "data.table")
 
 #hbrutto: regtyp
@@ -176,14 +171,12 @@ data = left_join(data, dissolvedata, by = c("hid"))
 
 # remove dissolved households from analysis
 # obs go from 260k to 230k, which corresponds to what we expect
-
 data <- subset(data, dissolved == 0)
 
 rm(dissolvedata)
 
 
 # mark households who acquired home ownership through inheritance/endowment
-
 data$inherit <- 0
 data$inherit[data$hgacquis == 2] <- 1
 table(data$inherit)
@@ -193,7 +186,6 @@ table(data$inherit)
 data <- subset(data, inherit == 0)
 
 # age at first observation (minage)
-
 minage.dat <- aggregate(data$d11101 ~ data$hid, data , function(x) min(x))
 
 # rename variables in minage.dat so that merge later works
@@ -210,10 +202,7 @@ head(data[,c("hid", "syear", "d11101", "minage")])
 
 # reduces dataset from ~210k to 64k
 # reducing to minage<=25 reduces dataset to 29k observations
-
 data <- subset(data, minage <= 25)
-
-
 
 ##########################################################################################
 #### create status and time variables and covariates #####################################
@@ -418,7 +407,6 @@ data <- data %>%
 table(data$educ)
 
 # maximum years of education is superior measure and has fewer missings
-
 maxedu.dat <- aggregate(d11109 ~ hid, data, function(x) max(x))
 names(maxedu.dat)[names(maxedu.dat) == "d11109"] <- "maxedu"
 data = left_join(data, maxedu.dat, by = "hid")
@@ -445,7 +433,7 @@ lapply(list(data$d11109, data$maxedu, data$educ), summary)
 dataw <- subset(data, syear == firstyear)
 dataw <- as.data.frame(dataw)
 
-
+# subset only selevant variables
 datawvars <- c("hid", "pid", "failureflag", "d11102ll", "d11104", "educ", "ever_div", "d11109" , "e11106",
                 "i11101" ,"l11101", "l11102", "minage", "firstyear",
                 "lastyear", "birthyear", "firstfailyear", "migback", "maxedu", "hhincimp", "regtyp")
@@ -454,7 +442,7 @@ dataw <- select(dataw, one_of(datawvars))
 
 rm(datawvars)
 
-# rename covariates
+# rename variables
 names(dataw) <- c( "hid", "pid", "event", "gender", "married", "educ", "ever_div", "yearsedu", "sector",
                     "hhinc2", "state", "region", "minage", "firstyear",
                     "lastyear", "birthyear", "firstfailyear", "migback", "maxedu", "hhinc", "rural")
@@ -474,17 +462,16 @@ rm(id2)
 head(dataw)
 
 # create time to event variable
-
 dataw <- mutate(dataw, 
                  time = ifelse(dataw$event==1, 
                                dataw$firstfailyear- dataw$firstyear +1,
                                dataw$lastyear - dataw$firstyear +1))
+# delete old identifiers               
 dataw$hid <- NULL
 dataw$pid <- NULL
 
 
 # put time variable in front
-
 tvar <- dataw$time
 pnr <- dataw$id
 dataw$id <- NULL
