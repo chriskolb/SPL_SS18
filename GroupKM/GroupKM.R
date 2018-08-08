@@ -1,13 +1,6 @@
-rm(list=ls())
-
-# set working directory setwd('C:/...') 
-# setwd('~/...')    # linux/mac os
-# setwd('/Users/...') # windows
-
-#install and load packages
-libraries = c("")
+libraries = c("survival", "ggplot2", "survminer")
 lapply(libraries, function(x)if(!(x %in% installed.packages()))
-   {install.packages(x)})
+{install.packages(x)})
 lapply(libraries, library, quietly=TRUE, character.only=TRUE)
 
 #load dataset
@@ -21,10 +14,10 @@ load("datfinal.RDA")
 ### Storing survObject, labs= category description, Legend Title
 kmGroupKurves = function(labs,title,line = c(1,1),conf = T){
   ggsurvplot(wide.fit, conf.int = conf, legend.labs = labs, 
-  legend.title = title, censor = F, palette = "strata", risk.table = T,
-  pval = TRUE, pval.method = TRUE, log.rank.weights = "S2", 
-  risk.table.height = .25, ylim = c(0,1), xlim = c(0,30), 
-  surv.median.line = "hv", linetype = line, size = 0.5)
+             legend.title = title, censor = F, palette = "strata", risk.table = T,
+             pval = TRUE, pval.method = TRUE, log.rank.weights = "S2", 
+             risk.table.height = .25, ylim = c(0,1), xlim = c(0,30), 
+             surv.median.line = "hv", linetype = line, size = 0.5)
 }
 
 # KM by gender ################################################################
@@ -94,14 +87,14 @@ rm(wide.fit, medinc, dat.inc)
 wide.fit = survfit(Surv(time, event, type = "right") ~ educ, data = dat)
 
 km.edu = kmGroupKurves(c("Elementary", "Medium", "Higher voc.", "High"),
-  "Education", line = c(1,1,1,1), conf = F)
+                       "Education", line = c(1,1,1,1), conf = F)
 
 rm(wide.fit)
 
 # KM by cohorts 84-87 and 94-97 ###############################################
 
 dat = mutate(dat, cohort8494 = ifelse (dat$firstyear <= 1987, 1,
-  ifelse(dat$firstyear >= 1994 & dat$firstyear <= 1997, 2, NA)))
+                                       ifelse(dat$firstyear >= 1994 & dat$firstyear <= 1997, 2, NA)))
 summary(dat$cohort8494)
 table(dat$cohort8494)
 #define survival object and fit KM estimator
@@ -110,3 +103,25 @@ wide.fit = survfit(Surv(time, event, type = "right") ~ cohort8494, data = dat)
 km.coh = kmGroupKurves(c("84-87", "94-97"),"Cohorts")
 
 rm(wide.fit)
+
+km.glist1 <- list(km.inc, km.mig)
+
+km.plot1 <- arrange_ggsurvplots(km.glist1, ncol = 2, nrow = 1, print = FALSE,
+                                risk.table.height = 0.25,
+                                surv.plot.height = 1)
+
+
+km.glist2 <- list(km.reg, km.urban)
+
+km.plot2 <- arrange_ggsurvplots(km.glist2, ncol = 2, nrow = 1, print = FALSE,
+                                risk.table.height = 0.25,
+                                surv.plot.height = 1)
+
+km.glist3 <- list(km.marr,km.div)
+km.plot3 <- arrange_ggsurvplots(km.glist3, ncol = 2, nrow = 1, print = FALSE,
+                                risk.table.height = 0.25,
+                                surv.plot.height = 1)
+print(km.plot1)
+print(km.plot2)
+print(km.plot3)
+print(km.edu)
