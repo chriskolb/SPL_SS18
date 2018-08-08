@@ -1,10 +1,13 @@
 rm(list=ls())
 
-# survival package to estimate models, survminer package for plots and diagnostics
+
+libraries = c("survival", "rms", "survminer", "stargazer", "reporttools", "dplyr", "readr", "flexsurv", "ggfortify", "ggplot2")
+lapply(libraries, function(x)if(!(x %in% installed.packages()))
+{install.packages(x)})
+lapply(libraries, library, quietly=TRUE, character.only=TRUE)
+
 
 load("datfinal.RDA")
-
-
 
 
 # define survival object
