@@ -19,7 +19,8 @@ Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
 
 ```
 
-![Picture1](ComparisonKM_FH.png)
+![Picture1](Delta_Beta.png)
+
 ### R Code
 ```R
 rm(list = ls())
