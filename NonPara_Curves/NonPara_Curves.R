@@ -1,8 +1,11 @@
 rm(list=ls())
-#setwd(path) in path.R
+
 source(".path.R")
 #install and load packages
-source("packages.R")
+libraries = c("survival", "rms", "survminer", "dplyr", "readr", "ggplot2")
+lapply(libraries, function(x)if(!(x %in% installed.packages()))
+   {install.packages(x)})
+lapply(libraries, library, quietly=TRUE, character.only=TRUE)
 
 load("datfinal.RDA")
 
