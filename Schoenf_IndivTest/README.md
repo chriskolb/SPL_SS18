@@ -16,7 +16,10 @@ Keywords : 'survival analysis, non-parametric estimation, semi-parametric estima
 
 Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
 ```
-![Picture1](Schoenf_IndivT.png)
+
 ![Picture1](Schoenf_IndivTest.png)
+
+![Picture1](Schoenf_IndivT.png)
+
 ### R
 ```R
