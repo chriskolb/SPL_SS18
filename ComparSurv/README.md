@@ -15,10 +15,13 @@ Keywords : 'survival analysis, non-parametric estimation, parametric distributio
             Cox Regression, Kaplan Meier, R'
 
 Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
+
 ```
+
 ![Picture1](ComparisonSurvival.png)
 
-### R
+### R Code
+
 ```R
 
 
