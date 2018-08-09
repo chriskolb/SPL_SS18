@@ -2,10 +2,8 @@ Name of QuantLet : Schoenf_IndivTest
 
 Published in : SPL
 
-Description : 
-	      
-              
-
+Description : 'Graphical diagnostic checking of the PH assumption (test the null hypothesis of 
+	       proportional hazards) - plot them against time'
 
 Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation, 
             hazard rate, Kaplan Meier, R'
