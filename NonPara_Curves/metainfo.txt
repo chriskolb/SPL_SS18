@@ -2,11 +2,9 @@ Name of QuantLet : NonPara_Curves
 
 Published in : SPL
 
-Description : 
+Description : 'Function producing Kaplan-Meier and Fleming-Harrington estimators for 
+	       survival function and hazard function at a 95% confidence interval.'
 	      
-              
-
-
 Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation, 
             hazard rate, Kaplan Meier, R'
 
