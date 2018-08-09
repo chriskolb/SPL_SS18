@@ -3,17 +3,18 @@
 
 ```yaml
 
-Name of QuantLet : 
+Name of QuantLet : ComparHaz
 
 Published in : SPL
 
-Description : 
+Description : 'Compare estimated hazard function for five different models: Exponential model, 
+Model with flexible splines, log-logistic model, log-normal model and Weibull model. The graph shows the transitioning into homeownership'
 	      
               
 
 
-Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation,
-	    hazard rate, Kaplan Meier'
+Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation, 
+            hazard rate, Kaplan Meier, R'
 
 Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
 ```
