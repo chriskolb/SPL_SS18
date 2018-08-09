@@ -5,26 +5,27 @@
 
 ```yaml
 
-Name of QuantLet : 
+Name of QuantLet : GroupKM
 
 Published in : SPL
 
-Description : 
-	      
-              
+Description : 'Kaplan-Meier estimators for survival in rent
+	       Compare different subgroups: Region East/West, Region Urban/Rural, Household Income High/Low, 
+	       Migration Background Yes/No, Married Yes/No, Divorced Yes/No, Education'
 
-
-Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation,
-	    hazard rate, Kaplan Meier'
+Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation, 
+            hazard rate, Kaplan Meier, R'
 
 Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
+
 ```
 ![Picture1](KM_inc_mig.png)
 ![Picture1](KM_reg_urban.png)
 ![Picture1](KM_marr_div.png)
 ![Picture1](CKM_edu.png)
 
-### R
+### R Code 
+
 ```R
 rm(list = ls())
 
@@ -35,26 +36,25 @@ rm(list = ls())
 # install and load packages
 libraries = c("survival", "ggplot2", "survminer")
 lapply(libraries, function(x) if (!(x %in% installed.packages())) {
-    install.packages(x)
+  install.packages(x)
 })
 lapply(libraries, library, quietly = TRUE, character.only = TRUE)
 
 # load dataset
 load("datfinal.RDA")
 
-################################################################################################## 
-###KM by strata#### Function for Kaplan Meier Curves by Strata ###################################
-################################################################################################## 
-##################################################################################################
+############################################################################### 
+###KM by strata#### Function for Kaplan Meier Curves by Strata ################
+###############################################################################
+###############################################################################
 
 ### Storing survObject, labs= category description, Legend Title
 kmGroupKurves = function(labs, title, line = c(1, 1), conf = T) {
-    ggsurvplot(wide.fit, conf.int = conf, legend.labs = labs, 
-               legend.title = title, censor = F, palette = "strata", 
-               risk.table = T, pval = TRUE, pval.method = TRUE, 
-               log.rank.weights = "S2", risk.table.height = 0.25, 
-               ylim = c(0, 1), xlim = c(0,30), surv.median.line = "hv",
-               linetype = line, size = 0.5)
+  ggsurvplot(wide.fit, conf.int = conf, legend.labs = labs, 
+  legend.title = title, censor = F, palette = "strata", risk.table = T, 
+  pval = TRUE, pval.method = TRUE, log.rank.weights = "S2", 
+  risk.table.height = 0.25, ylim = c(0, 1), xlim = c(0,30), 
+  surv.median.line = "hv",linetype = line, size = 0.5)
 }
 
 # KM by gender ################################################################ 
@@ -124,15 +124,14 @@ rm(wide.fit, medinc, dat.inc)
 wide.fit = survfit(Surv(time, event, type = "right") ~ educ, data = dat)
 
 km.edu = kmGroupKurves(c("Elementary", "Medium", "Higher voc.", "High"), 
-                       "Education", line = c(1, 1, 1, 1), conf = F)
+  "Education", line = c(1, 1, 1, 1), conf = F)
 
 rm(wide.fit)
 
 # KM by cohorts 84-87 and 94-97 ###############################################
 
 dat = mutate(dat, cohort8494 = ifelse(dat$firstyear <= 1987, 1, 
-                                      ifelse(dat$firstyear >= 1994 & 
-                                             dat$firstyear <= 1997, 2, NA)))
+  ifelse(dat$firstyear >= 1994 & dat$firstyear <= 1997, 2, NA)))
 summary(dat$cohort8494)
 table(dat$cohort8494)
 # define survival object and fit KM estimator
@@ -145,17 +144,17 @@ rm(wide.fit)
 km.glist1 = list(km.inc, km.mig)
 
 km.plot1 = arrange_ggsurvplots(km.glist1, ncol = 2, nrow = 1, print = FALSE, 
-                                risk.table.height = 0.25, surv.plot.height = 1)
+  risk.table.height = 0.25, surv.plot.height = 1)
 
 
 km.glist2 = list(km.reg, km.urban)
 
 km.plot2 = arrange_ggsurvplots(km.glist2, ncol = 2, nrow = 1, print = FALSE, 
-                                risk.table.height = 0.25, surv.plot.height = 1)
+  risk.table.height = 0.25, surv.plot.height = 1)
 
 km.glist3 = list(km.marr, km.div)
 km.plot3 = arrange_ggsurvplots(km.glist3, ncol = 2, nrow = 1, print = FALSE, 
-                                risk.table.height = 0.25, surv.plot.height = 1)
+  risk.table.height = 0.25, surv.plot.height = 1)
 print(km.plot1)
 print(km.plot2)
 print(km.plot3)
