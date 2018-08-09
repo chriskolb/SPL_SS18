@@ -6,8 +6,7 @@ rm(list = ls())
 # setwd('/Users/...') # windows
 
 # load packages
-libraries = c("survival", "rms", "survminer", "dplyr", "readr", "flexsurv", "ggfortify", 
-              "ggplot2")
+libraries = c("survival", "rms", "survminer", "dplyr", "ggridges", "ggplot2")
 lapply(libraries, function(x) if (!(x %in% installed.packages())) {
   install.packages(x)
 })
