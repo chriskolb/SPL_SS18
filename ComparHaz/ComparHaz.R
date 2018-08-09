@@ -6,9 +6,9 @@ rm(list = ls())
 
 # load packages
 libraries = c("survival", "rms", "survminer", "dplyr", "readr", "flexsurv", 
-              "ggfortify", "ggplot2")
+  "ggfortify", "ggplot2")
 lapply(libraries, function(x) if (!(x %in% installed.packages())) {
-    install.packages(x)
+  install.packages(x)
 })
 lapply(libraries, library, quietly = TRUE, character.only = TRUE)
 
@@ -18,13 +18,13 @@ load("datfinal.RDA")
 # define formula
 coxsurv = Surv(dat$time, dat$event, type = "right")
 coxform = as.formula("coxsurv ~ hhinc + rural + maxedu + region + migback + 
-                      married + ever_div")
+  married + ever_div")
 dat = within(dat, {
-    rural = factor(rural, labels = c("urban", "rural"))
-    region = factor(region, labels = c("west", "east"))
-    migback = factor(migback, labels = c("No", "Yes"))
-    married = factor(married, labels = c("No", "Yes"))
-    ever_div = factor(ever_div, labels = c("No", "Yes"))
+  rural = factor(rural, labels = c("urban", "rural"))
+  region = factor(region, labels = c("west", "east"))
+  migback = factor(migback, labels = c("No", "Yes"))
+  married = factor(married, labels = c("No", "Yes"))
+  ever_div = factor(ever_div, labels = c("No", "Yes"))
 })
 cox.ph = coxph(coxform, data = dat)
 # define survival object
@@ -32,7 +32,7 @@ coxparm = Surv(dat$time, dat$event, type = "right")
 
 # define model formula
 parmform = as.formula("coxparm ~ hhinc + rural + maxedu + region + migback + 
-                       married + ever_div")
+  married + ever_div")
 # Kaplan-Meier estimator
 kapm = survfit(coxparm ~ 1, data = dat)
 # puts survival table from kapm object into a data frame
@@ -55,12 +55,12 @@ flex.spline = flexsurvspline(coxparm ~ 1, data = dat, k = 2, scale = "odds")
 ggplot(data.frame(summary(expo, type = "hazard")), aes(x = time)) + 
   geom_line(aes(y = est, col = "Exponential")) + 
   geom_line(data = data.frame(summary(weibull, type = "hazard")), 
-    aes(y = est, col = "Weibull")) + 
+  aes(y = est, col = "Weibull")) + 
   geom_line(data = data.frame(summary(loglog, 
-    type = "hazard")), aes(y = est, col = "Log-Logistic")) + 
+  type = "hazard")), aes(y = est, col = "Log-Logistic")) + 
   geom_line(data = data.frame(summary(lnormal, 
-    type = "hazard")), aes(y = est, col = "Log-Normal")) + 
+  type = "hazard")), aes(y = est, col = "Log-Normal")) + 
   geom_line(data = data.frame(summary(flex.spline, 
-    type = "hazard")), aes(y = est, col = "Flexible Splines")) + 
+  type = "hazard")), aes(y = est, col = "Flexible Splines")) + 
   labs(x = "Time (years)", 
-    y = "Hazard Function", col = "Models") + theme_classic()
+  y = "Hazard Function", col = "Models") + theme_classic()
