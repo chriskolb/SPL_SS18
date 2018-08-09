@@ -1,0 +1,13 @@
+Name of QuantLet : SurvivalDens
+
+Published in : SPL
+
+Description : 
+	      
+              
+
+
+Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation, 
+            hazard rate, Kaplan Meier, R'
+
+Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
