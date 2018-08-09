@@ -1,7 +1,8 @@
 
 rm(list = ls())
 
-# set working directory setwd('C:/...') setwd('~/...') # linux/mac os
+# set working directory setwd('C:/...') 
+# setwd('~/...') # linux/mac os
 # setwd('/Users/...') # windows
 
 # load packages
