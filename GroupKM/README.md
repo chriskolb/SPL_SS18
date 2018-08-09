@@ -5,19 +5,19 @@
 
 ```yaml
 
-Name of QuantLet : 
+Name of QuantLet : GroupKM
 
 Published in : SPL
 
-Description : 
-	      
-              
+Description : 'Kaplan-Meier estimators for survival in rent
+	       Compare different subgroups: Region East/West, Region Urban/Rural, Household Income High/Low, 
+	       Migration Background Yes/No, Married Yes/No, Divorced Yes/No, Education'
 
-
-Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation,
-	    hazard rate, Kaplan Meier'
+Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation, 
+            hazard rate, Kaplan Meier, R'
 
 Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
+
 ```
 ![Picture1](KM_inc_mig.png)
 ![Picture1](KM_reg_urban.png)
