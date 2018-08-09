@@ -3,14 +3,13 @@
 
 ```yaml
 
-Name of QuantLet : 
+Name of QuantLet : InflObs_DeltaBeta
 
 Published in : SPL
 
-Description : 
+Description : 'Testing for the presence of influential observations via Delta-Beta plots.
+	       Visualize serious outliers using ggcoxdiagnostics from the survminer package.'
 	      
-              
-
 
 Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation,
 	    hazard rate, Kaplan Meier'
@@ -23,22 +22,22 @@ Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
 
 ### R Code
 ```R
-rm(list = ls())
 
-# set working directory setwd('C:/...') 
-# setwd('~/...') # linux/mac os
-# setwd('/Users/...') # windows
 
 # install and load packages
 rm(list = ls())
 
 
-libraries = c("survival", "rms", "survminer", "stargazer", "reporttools", 
-              "dplyr", "readr", "flexsurv", "ggfortify", "ggplot2")
+libraries = c("survival", "rms", "survminer", "stargazer", "reporttools", "dplyr", 
+  "readr", "flexsurv", "ggfortify", "ggplot2")
 lapply(libraries, function(x) if (!(x %in% installed.packages())) {
-    install.packages(x)
+  install.packages(x)
 })
 lapply(libraries, library, quietly = TRUE, character.only = TRUE)
+
+# set working directory setwd('C:/...') 
+# setwd('~/...') # linux/mac os
+# setwd('/Users/...') # windows
 
 
 load("datfinal.RDA")
@@ -49,7 +48,7 @@ coxsurv = Surv(dat$time, dat$event, type = "right")
 
 # define formula
 coxform = as.formula("coxsurv ~ hhinc + rural + maxedu + region + migback + 
-                     married + ever_div")
+  married + ever_div")
 
 # estimate Cox regression
 cox.ph = coxph(coxform, data = dat)
@@ -64,11 +63,11 @@ displayCoxPH(cox.ph, cap = "", dig.coef = 3, dig.p = 2)
 
 # Forest plot of results
 dat = within(dat, {
-    rural = factor(rural, labels = c("urban", "rural"))
-    region = factor(region, labels = c("west", "east"))
-    migback = factor(migback, labels = c("No", "Yes"))
-    married = factor(married, labels = c("No", "Yes"))
-    ever_div = factor(ever_div, labels = c("No", "Yes"))
+  rural = factor(rural, labels = c("urban", "rural"))
+  region = factor(region, labels = c("west", "east"))
+  migback = factor(migback, labels = c("No", "Yes"))
+  married = factor(married, labels = c("No", "Yes"))
+  ever_div = factor(ever_div, labels = c("No", "Yes"))
 })
 cox.ph = coxph(coxform, data = dat)
 
@@ -79,7 +78,7 @@ ggforest(cox.ph)
 # use Delta-Beta residuals to detect influential observations scaled by standard
 # errors of coefficients
 ggcoxdiagnostics(cox.ph, type = "dfbetas", ox.scale = "observation.id", 
-                 hline.col = "darkgreen", hline.alpha = 0.5, point.alpha = 0.4,
-                 point.col = "lightcoral", sline.alpha = 0.4, 
-                 sline.col = "dodgerblue")
+  hline.col = "darkgreen", hline.alpha = 0.5, point.alpha = 0.4, 
+  point.col = "lightcoral", sline.alpha = 0.4, sline.col = "dodgerblue")
+  
 ```
