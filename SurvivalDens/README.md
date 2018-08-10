@@ -6,8 +6,8 @@ Name of QuantLet : SurvivalDens
 
 Published in : SPL
 
-Description : 'Compare the distribution of the survival times - 
-	       Survival States by Federal State'     
+Description : 'Compare the distribution of survival times - 
+	       Survival Times by Federal State'     
               
 Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation, 
             hazard rate, density estimation, Kaplan Meier, R'
@@ -36,7 +36,8 @@ load("datfinal.RDA")
 
 
 ###############################################################################
-####Density plots by federal states ###########################################
+#### Density plots by federal states ##########################################
+###############################################################################
 
 #### distribution of time to event by state ###
 dist = subset(dat, event == 1)
@@ -54,25 +55,4 @@ ggplot(dist, aes(x = dist$time, y = dist$state, fill = dist$state)) +
 
 rm(dist)
 
-#### distribution of hhinc by State ###
-dist = subset(dat, hhinc < 90000)
-dist$yeargroup = as.factor(dist$firstyear)
-levels(dist$state)
-hist(dist$hhinc)
-
-# gradient color style
-ggplot(dist, aes(x = dist$hhinc, y = dist$state, fill = dist$region)) + 
-  geom_density_ridges_gradient(aes(fill = ..x..), scale = 2.5, size = 0.3) + 
-  scale_fill_gradientn(colours = c("#0D0887FF", "#CC4678FF", "#F0F921FF"), 
-                       name = "Duration") + 
-  theme_ridges() + 
-  labs(title = "Density of Household Income ", x = "Household Income", 
-       y = "States")
-
-# alternating color style
-ggplot(dist, aes(x = hhinc, y = state, fill = state)) + 
-  geom_density_ridges(scale = 2.5) + 
-  theme_minimal() + scale_fill_cyclical(values = c("blue", "green")) + 
-  labs(title = "Density of Household Income", x = "Household Income", 
-       y = "States")
 ```
