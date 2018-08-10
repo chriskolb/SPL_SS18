@@ -9,8 +9,8 @@ Published in : SPL
 Description : 'Function producing Kaplan-Meier and Fleming-Harrington estimators for 
 	       survival function and hazard function at a 95% confidence interval.'
 	      
-Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation, 
-            hazard rate, Kaplan Meier, R'
+Keywords : 'survival analysis, non-parametric estimation, cumulative hazard, 
+            survival function, Kaplan Meier, Fleming Harrington, R'
 
 Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
 
