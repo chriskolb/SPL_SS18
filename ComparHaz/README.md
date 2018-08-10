@@ -37,6 +37,8 @@ lapply(libraries, library, quietly = TRUE, character.only = TRUE)
 # load dataset
 load("datfinal.RDA")
 
+# define survival object
+coxparm = Surv(dat$time, dat$event, type = "right")
 
 # define model formula
 parmform = as.formula("coxparm ~ hhinc + rural + maxedu + region + migback + 
