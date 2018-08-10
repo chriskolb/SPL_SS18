@@ -81,5 +81,5 @@ colnames(AICs) = c("AIC", "Log-Likelihood")
 t(AICs)
 
 # Log-normal has best fit
-stargazer(t(AICs), out = "aic.tex")
+stargazer(t(AICs), out = "aic.tex", digits=0)
 ```
