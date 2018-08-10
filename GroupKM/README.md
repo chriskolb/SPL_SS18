@@ -14,7 +14,7 @@ Description : 'Function for graphically appealing plots of Kaplan-Meier estimate
 	       Migration Background Yes/No, Married Yes/No, Divorced Yes/No, Education'
 
 Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation, 
-            hazard rate, Kaplan Meier, R'
+            hazard rate, stratification, logrank, peto-peto, Kaplan Meier, R'
 
 Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
 
