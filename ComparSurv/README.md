@@ -12,8 +12,8 @@ Description : 'Estimated survival function for four classical parametric distrib
 	       (Exponential model,  log-logistic model, log-normal model and Weibull model), 
 	       flexible parametric splines, Kaplan-Meier estimator and Cox regression'
 
-Keywords : 'survival analysis, non-parametric estimation, parametric distribution, 
-            Cox Regression, Kaplan Meier, R'
+Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation,
+            parametric distribution, Cox Regression, Kaplan Meier, survival function, R'
 
 Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
 
