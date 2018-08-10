@@ -17,6 +17,7 @@ Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
 ```
 
 ![Picture1](ComparisonKM_FH.png)
+![Picture1](KMFHcompar.png)
 
 ### R Code
 
