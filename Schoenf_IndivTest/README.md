@@ -10,8 +10,8 @@ Description : 'Graphical diagnostic check for the proportional hazards (PH) assu
                null hypothesis of PH by plotting scaled Schoenfeld residuals against time,
 	       residuals show zero slope under the Null'
 
-Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation, 
-            hazard rate, Kaplan Meier, R'
+Keywords : 'survival analysis, semi-parametric estimation, Cox model, proportional hazards,
+            testing, Schoenfeld, scaled Schoenfeld residuals, diagnostics, R'
 
 Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
 
