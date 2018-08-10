@@ -14,7 +14,9 @@ Description : This repository contains
 	      4) the report 
 	      5) the presentation
 	      
-	     -
+	      - All data files and scripts need to be in the same folder
+	      - path.R needs to be specified by the user
+	      
 	      
               
 
