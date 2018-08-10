@@ -8,13 +8,13 @@ Name of QuantLet : DataVisualization
 
 Published in : SPL
 
-Description : 'Provide some graphs for a better understanding of the data.
-               Visualization of survival time for randomly drawn individuals - support 
-               the need of statistical models that account for censoring.
-	       As the subsample is randomly drawn, the graph varies amongst different samples'
+Description : 'Generate a plot for visualizing the temporal nature of survival data.
+               Plot of survival time for 500 randomly drawn individuals - illustrate 
+               why we need of statistical models that account for censoring.
+	       As the subsample is randomly drawn, the graph varies for different iterations'
 	      
 Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation, 
-            hazard rate, Kaplan Meier, R'
+            hazard rate, Kaplan Meier, visualization, R'
 
 Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
 ```
@@ -43,7 +43,7 @@ load("datfinal.RDA")
 #### Data structure visualization ################################################
 ##################################################################################
 
-# permutate persID to get rid of pnr (=syear) dependencies in surv. time
+# permutate persID to get rid of pnr (=syear) dependencies in survival time
 dat.str <- dat
 dat.str$pnr <- sample(1:nrow(dat), nrow(dat), replace=F)
 dat.str1 <- subset(dat.str, pnr<500)
