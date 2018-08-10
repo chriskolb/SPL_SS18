@@ -6,26 +6,27 @@
 ##########################################################################################
 
 #Note1: All scripts and SOEP data files need to be in the same directory
-#Note2: .path.R file needs to be specified by the user
+#Note2: path.R file needs to be specified by the user 
 
 rm(list=ls())
 
-# load path to SOEP data
-source(".path.R")
+# Load path to SOEP data (runtime <1sec)
+source("path.R")
 
-# install and load packages
+# Install and load packages (runtime <1sec)
 source("packages.R")
 
-# load all written functions 
+# Load written functions (runtime <1sec)
 source("functions.R")
 
-# Wrangle the data
+# Wrangle the data (runtime 337sec)
+# This script produces datfinal.RDA from SOEP .csv files
 source("datawrangling.R")
 
-# load descriptives 
+# Load descriptives (runtime 11sec)
 source("descriptives.R")
 
-# load analysis
+# Load analysis (runtime 58sec)
 source("analysis.R")
 
 
