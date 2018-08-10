@@ -16,9 +16,9 @@ Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
 
 ```
 
-![Picture1](Schoenf_IndivTest.png)
+![Picture1](schoenfeld2.png)
 
-![Picture1](Schoenf_IndivT.png)
+![Picture1](schoenfeldall.png)
 
 ### R Code
 
