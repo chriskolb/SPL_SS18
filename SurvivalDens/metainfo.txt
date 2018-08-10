@@ -2,11 +2,9 @@ Name of QuantLet : SurvivalDens
 
 Published in : SPL
 
-Description : 
-	      
+Description : 'Compare the distribution of the survival times - 
+	       Survival States by Federal State'     
               
-
-
 Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation, 
             hazard rate, Kaplan Meier, R'
 
