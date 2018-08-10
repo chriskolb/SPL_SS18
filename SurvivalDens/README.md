@@ -10,7 +10,7 @@ Description : 'Compare the distribution of the survival times -
 	       Survival States by Federal State'     
               
 Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation, 
-            hazard rate, Kaplan Meier, R'
+            hazard rate, density estimation, Kaplan Meier, R'
 
 Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
 ```
