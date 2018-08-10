@@ -9,6 +9,7 @@ Published in: Statistical Programming Languages
 
 Description : () This repository contains 
                   1. the full source code 
+		     master.R, path.R, packages.R, datawrangling.R, functions.R, descriptives.R, analysis.R
 	          2. the cleaned data set datfinal.RDA
 	          3. Quantlet folders 
 	          4. the report (+tex files)
