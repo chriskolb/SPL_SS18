@@ -53,6 +53,4 @@ ggplot(dist, aes(x = dist$time, y = dist$state, fill = dist$state)) +
   labs(title = "Density of Time to Event", x = "Time", y = "States")
 
 
-rm(dist)
-
 ```
