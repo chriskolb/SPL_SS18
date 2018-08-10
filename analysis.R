@@ -7,7 +7,7 @@
 
 
 #Note1: All scripts and SOEP data files need to be in the same directory
-#Note2: .path.R file needs to be specified by the user
+#Note2: path.R file needs to be specified by the user
 #Note3: This script needs to load functions.R script first
 
 #Structure:
