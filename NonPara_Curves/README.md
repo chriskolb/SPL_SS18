@@ -43,6 +43,7 @@ load("datfinal.RDA")
 
 ###############################################################################
 ##Comparison Kaplan-Meier & Nelson-Aalen/Fleming-Harrington ###################
+###############################################################################
 
 # Kaplan-Meier estimator
 km.fit = survfit(Surv(time, event, type = "right") ~ 1, data = dat, 
@@ -54,14 +55,13 @@ fh.fit = survfit(Surv(time, event, type = "right") ~ 1, data = dat,
 kmfh.all = list(km.fit, fh.fit)
 
 #### Function for ggsurvplot_combine ##### store survplot object and choose
-#### functional argument (default is Survival Function)
+# functional argument (default is Survival Function)
 
 nonparametricKurves = function(fun = NULL) {
    ggsurvplot_combine(kmfh.all, data = dat, conf.int = T, legend.labs = c("KM", 
    "Fleming-Harrington"), legend.title = "Model", fun = fun, risk.table = F, 
    cumcensor = FALSE, censor = FALSE, linetype = c(1, 1), size = 0.3)
 }
-
 
 # Survival Function
 surv.all = nonparametricKurves()
