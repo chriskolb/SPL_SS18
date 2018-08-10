@@ -6,7 +6,7 @@
 ##########################################################################################
 
 #Note1: All scripts and SOEP data files need to be in the same directory
-#Note2: .path.R file needs to be specified by the user
+#Note2: path.R file needs to be specified by the user
 
 #Structure:
 #0: Set-up
@@ -26,7 +26,7 @@
 rm(list=ls())
 
 #setwd(path) in path.R
-source(".path.R")
+source("path.R")
 
 #install and load packages
 source("packages.R")
