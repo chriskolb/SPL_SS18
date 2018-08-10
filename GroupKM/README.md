@@ -21,8 +21,8 @@ Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
 ```
 ![Picture1](kmplot1.png)
 ![Picture1](kmplot2.png)
-![Picture1](kmplt3.png)
-![Picture1](kmisce97.png)
+![Picture1](kmplot3.png)
+![Picture1](KMisced97.png)
 
 ### R Code 
 
