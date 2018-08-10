@@ -128,18 +128,7 @@ km.edu = kmGroupKurves(c("Elementary", "Medium", "Higher voc.", "High"),
 
 rm(wide.fit)
 
-# KM by cohorts 84-87 and 94-97 ###############################################
-
-dat = mutate(dat, cohort8494 = ifelse(dat$firstyear <= 1987, 1, 
-  ifelse(dat$firstyear >= 1994 & dat$firstyear <= 1997, 2, NA)))
-summary(dat$cohort8494)
-table(dat$cohort8494)
-# define survival object and fit KM estimator
-wide.fit = survfit(Surv(time, event, type = "right") ~ cohort8494, data = dat)
-
-km.coh = kmGroupKurves(c("84-87", "94-97"), "Cohorts")
-
-rm(wide.fit)
+# Arrange plots ###############################################################
 
 km.glist1 = list(km.inc, km.mig)
 
@@ -155,6 +144,8 @@ km.plot2 = arrange_ggsurvplots(km.glist2, ncol = 2, nrow = 1, print = FALSE,
 km.glist3 = list(km.marr, km.div)
 km.plot3 = arrange_ggsurvplots(km.glist3, ncol = 2, nrow = 1, print = FALSE, 
   risk.table.height = 0.25, surv.plot.height = 1)
+
+# Print plots #################################################################
 print(km.plot1)
 print(km.plot2)
 print(km.plot3)
