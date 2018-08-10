@@ -1,14 +1,15 @@
 
 rm(list = ls())
 
-# set working directory setwd('C:/...') setwd('~/...') # linux/mac os
+# set working directory setwd('C:/...') 
+# setwd('~/...') # linux/mac os
 # setwd('/Users/...') # windows
 
 # load packages
 libraries = c("survival", "rms", "survminer", "stargazer", "reporttools", "dplyr", 
-  "readr", "flexsurv", "ggfortify", "ggplot2")
+   "readr", "flexsurv", "ggfortify", "ggplot2")
 lapply(libraries, function(x) if (!(x %in% installed.packages())) {
-  install.packages(x)
+   install.packages(x)
 })
 lapply(libraries, library, quietly = TRUE, character.only = TRUE)
 
@@ -27,7 +28,7 @@ coxsurv = Surv(dat$time, dat$event, type = "right")
 
 # define formula
 coxform = as.formula("coxsurv ~ hhinc + rural + maxedu + region + migback + 
-  married + ever_div")
+   married + ever_div")
 
 # estimate Cox regression
 cox.ph = coxph(coxform, data = dat)
@@ -42,11 +43,11 @@ displayCoxPH(cox.ph, p = "", dig.coef = 3, dig.p = 2)
 
 # Forest plot of results
 dat = within(dat, {
-  rural = factor(rural, labels = c("urban", "rural"))
-  region = factor(region, labels = c("west", "east"))
-  migback = factor(migback, labels = c("No", "Yes"))
-  married = factor(married, labels = c("No", "Yes"))
-  ever_div = factor(ever_div, labels = c("No", "Yes"))
+   rural = factor(rural, labels = c("urban", "rural"))
+   region = factor(region, labels = c("west", "east"))
+   migback = factor(migback, labels = c("No", "Yes"))
+   married = factor(married, labels = c("No", "Yes"))
+   ever_div = factor(ever_div, labels = c("No", "Yes"))
 })
 cox.ph = coxph(coxform, data = dat)
 
@@ -65,7 +66,7 @@ stargazer(coxtest$table, out = "schoenfeld.tex")
 
 # scaled Schoenfeld plots for two selected variables
 ggcoxzph(coxtest, resid = T, point.col = "lightcoral", point.alpha = 0.4, 
-         var = c("hhinc", "maxedu"))
+    var = c("hhinc", "maxedu"))
 
 # scaled Schoenfeld plots for all variables
 ggcoxzph(coxtest, point.alpha = 0.4, point.col = "lightcoral")
