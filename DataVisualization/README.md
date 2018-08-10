@@ -10,7 +10,8 @@ Published in : SPL
 
 Description : 'Provide some graphs for a better understanding of the data.
                Visualization of survival time for randomly drawn individuals - support 
-               the need of statistical models that account for censoring '
+               the need of statistical models that account for censoring.
+	       As the subsample is randomly drawn, the graph varies amongst different samples'
 	      
 Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation, 
             hazard rate, Kaplan Meier, R'
