@@ -20,19 +20,9 @@ load("datfinal.RDA")
 #### Data structure visualization ################################################
 ##################################################################################
 
-
 # permutate persID to get rid of pnr (=syear) dependencies in surv. time
 dat.str <- dat
 dat.str$pnr <- sample(1:nrow(dat), nrow(dat), replace=F)
-
-ggplot(dat.str, aes(x = pnr, y = time)) +
-  geom_linerange(aes(ymin = 0, ymax = time), size=0.3) +
-  geom_point(aes(shape = as.factor(event), color = as.factor(event)), stroke = 0.5, cex = 1) +
-  scale_shape_manual(values = c(3,4)) + guides(shape = F, color = F) +
-  labs(y = "Time (years)", x = "Subject ID") + coord_flip() + theme_classic()
-
-# plot too crowded, look only at subsample of 500
-
 dat.str1 <- subset(dat.str, pnr<500)
 
 ggplot(dat.str1, aes(x = pnr, y = time)) +
