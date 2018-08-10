@@ -13,8 +13,11 @@ Description : () This repository contains
 	          3. Quantlet folders 
 	          4. the report (+tex files)
 	          5. the presentation (+tex files)
+		  
 	      () All data files and scripts must be in the same folder
+	      
 	      () path.R needs to be specified by the user
+	      
 	      () The code should be run in this order
 	          1. modify and run path.R
                   2. run packages.R
@@ -22,10 +25,13 @@ Description : () This repository contains
 	          4. run functions.R
 	          5. run descriptives.R
 	          6. run analysis.R
+		  
 	      () datawrangling.R produces datfinal.RDA and can only be run on the original SOEP files
 	         pequiv.csv, pgen.csv, ppfadl.csv, hgen.csv, hbrutto.csv
+		 
 	      () If the .csv files are not available, skip datawrangling.R
 	         and directly continue to functions.R
+		 
 	      () To check for errors in our code, use master.R to run all scripts consecutively
 	     
 
