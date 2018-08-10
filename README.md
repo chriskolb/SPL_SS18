@@ -34,6 +34,7 @@ Description : () This repository contains
 	         and directly continue to functions.R
 		 
 	      () To check for errors in our code, use master.R to run all scripts consecutively
+	         This produces no output but graphs and saved files
 	     
 
 Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
