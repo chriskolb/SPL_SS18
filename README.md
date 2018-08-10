@@ -17,12 +17,12 @@ Description : This repository contains
 	      () All data files and scripts need to be in the same folder
 	      () path.R needs to be specified by the user
 	      () The code should be run in this order:
-	           1. modify and run path.R
-		   2. run packages.R
-		   3. run datawrangling.R
-		   4. run functions.R
-		   5. run descriptives.R
-		   6. run analysis.R
+	           1) modify and run path.R
+		   2) run packages.R
+		   3) run datawrangling.R
+		   4) run functions.R
+		   5) run descriptives.R
+		   6) run analysis.R
 	      () datawrangling.R can only be run on the original SOEP data
 	         pequiv.csv, pgen.csv, ppfadl.csv, hgen.csv, hbrutto.csv
 		 datawrangling.R produces datfinal.RDA
