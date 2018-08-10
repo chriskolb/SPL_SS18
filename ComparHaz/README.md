@@ -12,8 +12,8 @@ Description : 'Compare estimated hazard function for five different models: Expo
 	       Model with flexible splines, log-logistic model, log-normal model and Weibull model. 
                The graph shows the transitioning into homeownership'
 	      
-Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation, 
-            hazard rate, Kaplan Meier, R'
+Keywords : 'survival analysis, parametric estimation, Weibull, Log-normal, Log-logistic,
+            Exponential, flexible splines, hazard rate, R'
 
 Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
 ```
