@@ -9,7 +9,7 @@ Name of QuantLet : GroupKM
 
 Published in : SPL
 
-Description : 'Kaplan-Meier estimators for survival in rent
+Description : 'Function for graphically appealing plots of Kaplan-Meier estimates for survival in rent
 	       Compare different subgroups: Region East/West, Region Urban/Rural, Household Income High/Low, 
 	       Migration Background Yes/No, Married Yes/No, Divorced Yes/No, Education'
 
