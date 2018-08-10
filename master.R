@@ -28,5 +28,5 @@ source("descriptives.R")
 
 # Load analysis (runtime 58sec)
 source("analysis.R")
-
+# Note: stargazer package produces irrelevant warning
 
