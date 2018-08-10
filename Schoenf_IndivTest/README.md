@@ -61,19 +61,16 @@ coxform = as.formula("coxsurv ~ hhinc + rural + maxedu + region + migback +
 cox.ph = coxph(coxform, data = dat)
 summary(cox.ph)
 
-
-
 ###############################################################################
 ########### Cox Model Diagnostics##############################################
 ###############################################################################
 
-
-# Schoenfeld test
+# Schoenfeld test statistics as .tex table
 coxtest = cox.zph(cox.ph, transform = "km")
 coxtest
 stargazer(coxtest$table, out = "schoenfeld.tex")
 
-# Schoenfeld graphical test of cox ph assumption
+#### Schoenfeld graphical test of cox ph assumption ####
 
 # scaled Schoenfeld plots for two selected variables
 ggcoxzph(coxtest, resid = T, point.col = "lightcoral", point.alpha = 0.4, 
