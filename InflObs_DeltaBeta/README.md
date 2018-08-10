@@ -11,8 +11,8 @@ Description : 'Testing for the presence of influential observations via Delta-Be
 	       Visualize serious outliers using ggcoxdiagnostics from the survminer package.'
 	      
 
-Keywords : 'survival analysis, non-parametric estimation, semi-parametric estimation,
-	    hazard rate, Kaplan Meier'
+Keywords : 'survival analysis, semi-parametric estimation, Cox model,
+	    hazard rate, Delta-Beta plot, proportional hazards, influential obserations'
 
 Author : Alice Drube, Konstantin Göbler, Chris Kolb, Richard v. Maydell
 
