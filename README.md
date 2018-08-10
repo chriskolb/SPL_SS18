@@ -3,9 +3,9 @@
 
 ```yaml
 
-Name of QuantLet : Survival Analysis and Homeownership
+Name of Project : Survival Analysis and Homeownership - Determinants of the Transition Time into Homeownership
 
-Published in: 'Statistical programming languages - Student Project on ''Survival Analysis and Homeownership - Determinants of the Transition Time into Homeownership'' '
+Published in: Statistical Programming Languages 
 
 Description : () This repository contains 
                   1. the full source code 
