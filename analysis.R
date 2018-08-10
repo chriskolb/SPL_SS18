@@ -30,7 +30,7 @@
 rm(list=ls())
 
 #setwd(path) in path.R
-source(".path.R")
+source("path.R")
 source("functions.R")
 
 #install and load packages
